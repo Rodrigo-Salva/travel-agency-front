@@ -1,0 +1,4 @@
+// Home page is served from src/app/page.tsx
+// This file is a placeholder to avoid empty route group directories.
+// It will never be rendered as app/page.tsx takes precedence for "/".
+export {}
