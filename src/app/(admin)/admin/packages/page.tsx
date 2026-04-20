@@ -1,14 +1,57 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Package, Plus, Search, Pencil, Trash2, Loader2, Star, Clock, X } from 'lucide-react'
+import { Package, Plus, Search, Pencil, Trash2, Loader2, Star, Clock, X, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+const PAGE_SIZE = 8
+
+function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  if (totalPages <= 1) return null
+  return (
+    <div className="flex items-center justify-between px-4 py-3 border-t border-brand-steel/10">
+      <p className="text-xs text-brand-steel">
+        Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}
+      </p>
+      <div className="flex items-center gap-1">
+        <button onClick={() => onChange(page - 1)} disabled={page === 1}
+          className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1)
+          .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+          .reduce<(number | '...')[]>((acc, p, i, arr) => {
+            if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push('...')
+            acc.push(p)
+            return acc
+          }, [])
+          .map((p, i) =>
+            p === '...' ? (
+              <span key={`e${i}`} className="px-2 text-brand-steel text-xs">…</span>
+            ) : (
+              <button key={p} onClick={() => onChange(p as number)}
+                className={`min-w-[28px] h-7 rounded-lg text-xs font-medium transition-colors ${page === p ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white hover:bg-brand-steel/10'}`}>
+                {p}
+              </button>
+            )
+          )}
+        <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 import { packagesApi } from '@/features/packages/api/packages.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { formatPrice } from '@/lib/utils/format'
@@ -48,6 +91,42 @@ const CHECKBOXES = [
   { key: 'is_featured',        label: 'Destacado' },
 ] as const
 
+function ImageUpload({ current, file, onChange }: { current: string | null; file: File | null; onChange: (f: File | null) => void }) {
+  const ref = useRef<HTMLInputElement>(null)
+  const preview = file ? URL.createObjectURL(file) : current ? `${BASE_URL}${current}` : null
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-brand-silver text-xs">Imagen</Label>
+      <div
+        onClick={() => ref.current?.click()}
+        className="relative w-full h-36 rounded-xl border-2 border-dashed border-brand-steel/20 bg-brand-darkest flex items-center justify-center cursor-pointer hover:border-brand-wine/50 transition-colors overflow-hidden"
+      >
+        {preview ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="preview" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+              <p className="text-white text-xs font-medium">Cambiar imagen</p>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-brand-steel">
+            <ImageIcon className="h-8 w-8" />
+            <p className="text-xs">Haz clic para subir imagen</p>
+          </div>
+        )}
+        <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+      </div>
+      {file && (
+        <button type="button" onClick={() => onChange(null)} className="text-xs text-brand-steel hover:text-red-400 transition-colors">
+          Quitar imagen
+        </button>
+      )}
+    </div>
+  )
+}
+
 function PackageModal({
   pkg,
   onClose,
@@ -57,6 +136,7 @@ function PackageModal({
 }) {
   const qc = useQueryClient()
   const isEdit = !!pkg
+  const [imageFile, setImageFile] = useState<File | null>(null)
 
   const { data: destData } = useQuery({
     queryKey: queryKeys.destinations.list({ page_size: 200 }),
@@ -116,10 +196,8 @@ function PackageModal({
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      isEdit
-        ? packagesApi.update(pkg.id, data as Record<string, unknown>)
-        : packagesApi.create(data as Record<string, unknown>),
+    mutationFn: (fd: globalThis.FormData) =>
+      isEdit ? packagesApi.update(pkg.id, fd) : packagesApi.create(fd),
     onSuccess: () => {
       toast.success(isEdit ? 'Paquete actualizado' : 'Paquete creado')
       qc.invalidateQueries({ queryKey: queryKeys.packages.all })
@@ -152,11 +230,19 @@ function PackageModal({
             <Loader2 className="h-8 w-8 animate-spin text-brand-wine" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="overflow-y-auto flex-1 flex flex-col">
+          <form onSubmit={handleSubmit((values) => {
+            const fd = new globalThis.FormData()
+            Object.entries(values).forEach(([k, v]) => {
+              if (v !== undefined && v !== '') fd.append(k, String(v))
+            })
+            if (imageFile) fd.append('image', imageFile)
+            mutation.mutate(fd)
+          })} className="overflow-y-auto flex-1 flex flex-col">
             <div className="p-6 space-y-5 flex-1">
               {/* Básico */}
               <div className="space-y-4">
                 <h3 className="text-xs font-semibold text-brand-steel uppercase tracking-wider border-b border-brand-steel/10 pb-2">Información básica</h3>
+                <ImageUpload current={pkgDetail?.image ?? null} file={imageFile} onChange={setImageFile} />
                 <div className="space-y-1.5">
                   <Label className="text-brand-silver text-xs">Nombre *</Label>
                   <Input {...register('name')} className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
@@ -271,14 +357,15 @@ function PackageModal({
 
 export default function AdminPackagesPage() {
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [editingPkg, setEditingPkg] = useState<PackageSummary | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.packages.list({ page_size: 100 }),
-    queryFn: () => packagesApi.list({ page_size: 100 }),
+    queryKey: queryKeys.packages.list({ page, page_size: PAGE_SIZE, search: search || undefined }),
+    queryFn: () => packagesApi.list({ page, page_size: PAGE_SIZE, search: search || undefined }),
     staleTime: 2 * 60 * 1000,
   })
 
@@ -295,13 +382,10 @@ export default function AdminPackagesPage() {
   const openNew = () => { setEditingPkg(null); setModalOpen(true) }
   const openEdit = (p: PackageSummary) => { setEditingPkg(p); setModalOpen(true) }
   const closeModal = () => setModalOpen(false)
+  const handleSearch = (v: string) => { setSearch(v); setPage(1) }
 
   const packages = data?.packages ?? []
-  const filtered = packages.filter((p) =>
-    !search ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.destination_name?.toLowerCase().includes(search.toLowerCase())
-  )
+  const total = data?.count ?? 0
 
   return (
     <div className="p-6 space-y-6">
@@ -311,7 +395,7 @@ export default function AdminPackagesPage() {
         <div>
           <p className="text-brand-wine text-xs font-semibold uppercase tracking-widest mb-1">Administración</p>
           <h1 className="font-display text-3xl font-bold text-white">Paquetes</h1>
-          <p className="text-brand-silver text-sm mt-1">{packages.length} paquetes registrados</p>
+          <p className="text-brand-silver text-sm mt-1">{total} paquetes registrados</p>
         </div>
         <button onClick={openNew}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
@@ -322,31 +406,42 @@ export default function AdminPackagesPage() {
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-steel" />
-        <Input placeholder="Buscar paquete o destino..." value={search} onChange={(e) => setSearch(e.target.value)}
+        <Input placeholder="Buscar paquete o destino..." value={search} onChange={(e) => handleSearch(e.target.value)}
           className="pl-9 bg-brand-dark border-brand-steel/20 text-white placeholder:text-brand-steel focus:border-brand-wine" />
       </div>
 
       <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-brand-wine" /></div>
-        ) : filtered.length === 0 ? (
+        ) : packages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Package className="h-10 w-10 text-brand-steel/40 mb-3" />
             <p className="text-brand-silver">No hay paquetes</p>
           </div>
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-brand-steel/10">
-                  {['Paquete', 'Destino', 'Categoría', 'Duración', 'Precio', 'Acciones'].map((h) => (
+                  {['Imagen', 'Paquete', 'Destino', 'Categoría', 'Duración', 'Precio', 'Acciones'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-brand-steel uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-steel/10">
-                {filtered.map((pkg) => (
+                {packages.map((pkg) => (
                   <tr key={pkg.id} className="hover:bg-brand-steel/5 transition-colors">
+                    <td className="px-4 py-3">
+                      {pkg.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`${BASE_URL}${pkg.image}`} alt={pkg.name} className="h-10 w-14 rounded-lg object-cover" />
+                      ) : (
+                        <div className="h-10 w-14 rounded-lg bg-brand-darkest border border-brand-steel/10 flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-brand-steel/40" />
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {pkg.is_featured && <Star className="h-3 w-3 text-amber-400 fill-amber-400 shrink-0" />}
@@ -386,6 +481,8 @@ export default function AdminPackagesPage() {
               </tbody>
             </table>
           </div>
+          <Pagination page={page} total={total} pageSize={PAGE_SIZE} onChange={setPage} />
+          </>
         )}
       </div>
     </div>

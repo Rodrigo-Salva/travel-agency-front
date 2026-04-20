@@ -25,4 +25,24 @@ export const hotelsApi = {
     const { data } = await apiClient.get(API.hotel(Number(id)))
     return data.hotel ?? data
   },
+
+  async create(payload: FormData | Record<string, unknown>): Promise<Hotel> {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.post(API.hotels, payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
+    return data.hotel ?? data
+  },
+
+  async update(id: number, payload: FormData | Record<string, unknown>): Promise<Hotel> {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.patch(API.hotel(id), payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
+    return data.hotel ?? data
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiClient.delete(API.hotel(id))
+  },
 }
