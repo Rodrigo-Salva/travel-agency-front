@@ -42,13 +42,19 @@ export const destinationsApi = {
     return data.destino as Destination
   },
 
-  create: async (payload: Partial<Destination>): Promise<Destination> => {
-    const { data } = await apiClient.post(API.destinations, payload)
+  create: async (payload: FormData | Partial<Destination>): Promise<Destination> => {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.post(API.destinations, payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
     return data.destino as Destination
   },
 
-  update: async (id: number, payload: Partial<Destination>): Promise<Destination> => {
-    const { data } = await apiClient.patch(API.destination(id), payload)
+  update: async (id: number, payload: FormData | Partial<Destination>): Promise<Destination> => {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.patch(API.destination(id), payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
     return data.destino as Destination
   },
 
