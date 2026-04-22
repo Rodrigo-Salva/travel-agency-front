@@ -79,7 +79,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'ta-auth',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
-          ? sessionStorage
+          ? localStorage
           : {
               getItem: () => null,
               setItem: () => {},
