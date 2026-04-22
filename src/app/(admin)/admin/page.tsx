@@ -14,10 +14,11 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { bookingsApi } from '@/features/bookings/api/bookings.api'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { apiClient } from '@/lib/api/client'
+import { API } from '@/lib/api/endpoints'
 
 function StatCard({
   label,
@@ -59,8 +60,12 @@ function StatCard({
 
 export default function AdminDashboardPage() {
   const { data: bookings = [] } = useQuery({
-    queryKey: queryKeys.bookings.all,
-    queryFn: () => bookingsApi.list(),
+    queryKey: [...queryKeys.bookings.all, 'admin-dashboard'],
+    queryFn: async () => {
+      const { data } = await apiClient.get(API.bookings, { params: { page_size: 100 } })
+      if ('results' in data) return data.results?.reservas ?? data.results ?? []
+      return data.reservas ?? []
+    },
     staleTime: 2 * 60 * 1000,
   })
 

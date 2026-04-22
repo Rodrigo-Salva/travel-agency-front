@@ -1,9 +1,15 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, MapPin, Users, ArrowRight } from 'lucide-react'
+import { Clock, MapPin, ArrowRight, Heart } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
+import { wishlistApi } from '@/lib/api/wishlist.api'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import type { PackageSummary } from '../types/package.types'
 
 interface Props {
@@ -11,12 +17,30 @@ interface Props {
 }
 
 export function PackageCard({ pkg }: Props) {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+  const { isAuthenticated } = useAuthStore()
+  const qc = useQueryClient()
+
   const imageUrl = pkg.image
-    ? pkg.image.startsWith('http')
-      ? pkg.image
-      : `${BASE_URL}${pkg.image}`
+    ? pkg.image.startsWith('http') ? pkg.image : `${(process.env.NEXT_PUBLIC_API_URL ?? '').replace('/api/', '') || 'http://localhost:8000'}${pkg.image}`
     : null
+
+  const { data: wishlist = [] } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: () => wishlistApi.list(),
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000,
+  })
+
+  const wishlistItem = wishlist.find(w => w.package === pkg.id)
+
+  const toggleWishlist = useMutation({
+    mutationFn: () => wishlistApi.toggle(pkg.id, wishlistItem?.id),
+    onSuccess: ({ added }) => {
+      qc.invalidateQueries({ queryKey: ['wishlist'] })
+      toast.success(added ? 'Agregado a tu lista de deseos' : 'Eliminado de tu lista de deseos')
+    },
+    onError: () => toast.error('Inicia sesión para guardar paquetes'),
+  })
 
   return (
     <Link
@@ -40,15 +64,23 @@ export function PackageCard({ pkg }: Props) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest/80 to-transparent" />
 
+        {/* Wishlist button */}
+        <button
+          onClick={e => { e.preventDefault(); toggleWishlist.mutate() }}
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${wishlistItem ? 'bg-brand-wine text-white' : 'bg-brand-darkest/70 text-brand-steel hover:text-brand-rose'}`}
+        >
+          <Heart className={`h-4 w-4 ${wishlistItem ? 'fill-white' : ''}`} />
+        </button>
+
         {/* Featured badge */}
         {pkg.is_featured && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 left-3">
             <Badge className="bg-brand-wine/90 text-white border-0 text-xs">Destacado</Badge>
           </div>
         )}
 
         {/* Category */}
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 flex gap-1.5">
           <Badge variant="secondary" className="bg-brand-darkest/80 text-brand-silver border-brand-steel/20 text-xs">
             {pkg.category_name}
           </Badge>

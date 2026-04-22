@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
+import { resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
 import type { Destination } from '@/features/destinations/types/destination.types'
 
@@ -54,7 +55,6 @@ function Pagination({ page, total, pageSize, onChange }: { page: number; total: 
     </div>
   )
 }
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -78,7 +78,7 @@ function ImageUpload({
   onChange: (f: File | null) => void
 }) {
   const ref = useRef<HTMLInputElement>(null)
-  const preview = file ? URL.createObjectURL(file) : current ? `${BASE_URL}${current}` : null
+  const preview = file ? URL.createObjectURL(file) : resolveImage(current)
 
   return (
     <div className="space-y-1.5">
@@ -325,7 +325,7 @@ export default function AdminDestinationsPage() {
                     <td className="px-4 py-3">
                       {dest.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`${BASE_URL}${dest.image}`} alt={dest.name} className="h-10 w-14 rounded-lg object-cover" />
+                        <img src={resolveImage(dest.image)!} alt={dest.name} className="h-10 w-14 rounded-lg object-cover" />
                       ) : (
                         <div className="h-10 w-14 rounded-lg bg-brand-darkest border border-brand-steel/10 flex items-center justify-center">
                           <ImageIcon className="h-4 w-4 text-brand-steel/40" />

@@ -32,7 +32,12 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = (data: LoginFormData) => login(data)
+  const onSubmit = (data: LoginFormData) => {
+    // Limpiar cookies viejas para evitar redirect loop del middleware
+    document.cookie = 'ta_auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    document.cookie = 'ta_user_type=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    login(data)
+  }
 
   const errorMessage =
     isError
