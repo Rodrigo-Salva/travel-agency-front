@@ -11,11 +11,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { hotelsApi } from '@/features/hotels/api/hotels.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
-import { formatPrice } from '@/lib/utils/format'
+import { formatPrice, resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
 import type { Hotel as HotelType } from '@/features/hotels/types/hotel.types'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
 const PAGE_SIZE = 8
 
 function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
@@ -87,7 +86,7 @@ function StarRow({ n }: { n: number }) {
 
 function ImageUpload({ current, file, onChange }: { current: string | null; file: File | null; onChange: (f: File | null) => void }) {
   const ref = useRef<HTMLInputElement>(null)
-  const preview = file ? URL.createObjectURL(file) : current ? `${BASE_URL}${current}` : null
+  const preview = file ? URL.createObjectURL(file) : resolveImage(current)
 
   return (
     <div className="space-y-1.5">
@@ -369,7 +368,7 @@ export default function AdminHotelsPage() {
                     <td className="px-4 py-3">
                       {hotel.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`${BASE_URL}${hotel.image}`} alt={hotel.name} className="h-10 w-14 rounded-lg object-cover" />
+                        <img src={resolveImage(hotel.image)!} alt={hotel.name} className="h-10 w-14 rounded-lg object-cover" />
                       ) : (
                         <div className="h-10 w-14 rounded-lg bg-brand-darkest border border-brand-steel/10 flex items-center justify-center">
                           <ImageIcon className="h-4 w-4 text-brand-steel/40" />

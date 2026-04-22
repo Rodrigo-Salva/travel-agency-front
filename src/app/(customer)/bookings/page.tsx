@@ -64,7 +64,9 @@ function BookingCard({ booking }: { booking: BookingSummary }) {
             {status.label}
           </span>
         </div>
-        <span className="text-xs text-brand-steel">{formatDate(booking.booking_date)}</span>
+        <Link href={ROUTES.customer.booking(booking.id)} className="text-xs text-brand-steel hover:text-brand-wine transition-colors">
+          {formatDate(booking.booking_date)} →
+        </Link>
       </div>
 
       {/* Body */}

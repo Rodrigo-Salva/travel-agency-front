@@ -29,3 +29,11 @@ export function formatDateRelative(dateStr: string): string {
 export function formatDuration(days: number, nights: number): string {
   return `${days} día${days !== 1 ? 's' : ''} / ${nights} noche${nights !== 1 ? 's' : ''}`
 }
+
+const _BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+
+export function resolveImage(path: string | null | undefined): string | null {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${_BASE}${path}`
+}
