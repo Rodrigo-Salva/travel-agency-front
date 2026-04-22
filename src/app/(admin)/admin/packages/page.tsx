@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
 const PAGE_SIZE = 8
 
 function Pagination({ page, total, pageSize, onChange }: { page: number; total: number; pageSize: number; onChange: (p: number) => void }) {
@@ -54,7 +53,7 @@ function Pagination({ page, total, pageSize, onChange }: { page: number; total: 
 
 import { packagesApi } from '@/features/packages/api/packages.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
-import { formatPrice } from '@/lib/utils/format'
+import { formatPrice, resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
 import type { PackageSummary } from '@/features/packages/types/package.types'
 
@@ -93,7 +92,7 @@ const CHECKBOXES = [
 
 function ImageUpload({ current, file, onChange }: { current: string | null; file: File | null; onChange: (f: File | null) => void }) {
   const ref = useRef<HTMLInputElement>(null)
-  const preview = file ? URL.createObjectURL(file) : current ? `${BASE_URL}${current}` : null
+  const preview = file ? URL.createObjectURL(file) : resolveImage(current)
 
   return (
     <div className="space-y-1.5">
@@ -435,7 +434,7 @@ export default function AdminPackagesPage() {
                     <td className="px-4 py-3">
                       {pkg.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`${BASE_URL}${pkg.image}`} alt={pkg.name} className="h-10 w-14 rounded-lg object-cover" />
+                        <img src={resolveImage(pkg.image)!} alt={pkg.name} className="h-10 w-14 rounded-lg object-cover" />
                       ) : (
                         <div className="h-10 w-14 rounded-lg bg-brand-darkest border border-brand-steel/10 flex items-center justify-center">
                           <ImageIcon className="h-4 w-4 text-brand-steel/40" />
