@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   MapPin,
@@ -36,7 +36,13 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, clearAuth } = useAuthStore()
+
+  function handleLogout() {
+    clearAuth()
+    router.push('/login')
+  }
 
   return (
     <div className="min-h-screen bg-brand-darkest flex">
@@ -91,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <button
-            onClick={clearAuth}
+            onClick={handleLogout}
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-brand-steel hover:text-red-400 hover:bg-red-500/5 transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />
