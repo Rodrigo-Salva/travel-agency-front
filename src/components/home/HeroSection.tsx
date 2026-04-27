@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <>
+    <section className="relative min-h-[75vh] flex items-center overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-hero-gradient" />
 
@@ -25,7 +26,7 @@ export function HeroSection() {
         }}
       />
 
-      <div className="relative z-10 container mx-auto px-4 py-20">
+      <div className="relative z-10 container mx-auto px-4 py-12">
         <div className="max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-wine/40 bg-brand-wine/10 px-4 py-1.5 text-sm text-brand-rose mb-6">
@@ -34,20 +35,20 @@ export function HeroSection() {
           </div>
 
           {/* Headline */}
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
             Descubre el{' '}
             <span className="text-gradient-brand">mundo</span>
             <br />
             con nosotros
           </h1>
 
-          <p className="text-lg text-brand-silver leading-relaxed mb-10 max-w-2xl">
+          <p className="text-base text-brand-silver leading-relaxed mb-7 max-w-2xl">
             Experiencias de viaje exclusivas, paquetes personalizados y destinos increibles.
             Tu aventura perfecta comienza aqui.
           </p>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap gap-4 mb-14">
+          <div className="flex flex-wrap gap-4 mb-8">
             <Link
               href={ROUTES.packages}
               className={cn(
@@ -101,23 +102,25 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-brand-steel/10 bg-brand-darkest/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 divide-x divide-brand-steel/10">
-            {[
-              { value: '500+', label: 'Destinos' },
-              { value: '10K+', label: 'Viajeros felices' },
-              { value: '4.9★', label: 'Calificacion promedio' },
-            ].map((stat) => (
-              <div key={stat.label} className="py-4 px-6 text-center">
-                <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-brand-steel mt-0.5">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+    </section>
+
+    {/* Stats row */}
+    <div className="border-t border-brand-steel/10 bg-brand-darkest">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-3 divide-x divide-brand-steel/10">
+          {[
+            { value: '500+', label: 'Destinos' },
+            { value: '10K+', label: 'Viajeros felices' },
+            { value: '4.9★', label: 'Calificacion promedio' },
+          ].map((stat) => (
+            <div key={stat.label} className="py-4 px-6 text-center">
+              <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-xs text-brand-steel mt-0.5">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
-    </section>
+    </div>
+    </>
   )
 }
