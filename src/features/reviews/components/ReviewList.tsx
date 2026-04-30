@@ -1,8 +1,13 @@
 'use client'
 
-import { Star, CheckCircle2, MessageSquare } from 'lucide-react'
+import { useState } from 'react'
+import { Star, CheckCircle2, MessageSquare, PenLine } from 'lucide-react'
 import { useReviews } from '../hooks/useReviews'
 import { formatDate } from '@/lib/utils/format'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { ROUTES } from '@/lib/constants/routes'
+import { ReviewForm } from './ReviewForm'
+import Link from 'next/link'
 
 interface Props {
   packageId: number
@@ -15,10 +20,7 @@ function StarRow({ rating, label }: { rating: number | null; label: string }) {
       <span className="text-brand-steel">{label}</span>
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`h-3 w-3 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`}
-          />
+          <Star key={i} className={`h-3 w-3 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`} />
         ))}
       </div>
     </div>
@@ -27,6 +29,8 @@ function StarRow({ rating, label }: { rating: number | null; label: string }) {
 
 export function ReviewList({ packageId }: Props) {
   const { data: reviews = [], isLoading } = useReviews(packageId)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const [showForm, setShowForm] = useState(false)
 
   if (isLoading) {
     return (
@@ -44,10 +48,31 @@ export function ReviewList({ packageId }: Props) {
 
   if (reviews.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <MessageSquare className="h-10 w-10 text-brand-steel/30 mb-3" />
-        <p className="text-brand-silver font-medium">Sin reseñas aun</p>
-        <p className="text-brand-steel text-sm mt-1">Se el primero en compartir tu experiencia</p>
+      <div className="space-y-5">
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <MessageSquare className="h-10 w-10 text-brand-steel/30 mb-3" />
+          <p className="text-brand-silver font-medium">Sin reseñas aun</p>
+          <p className="text-brand-steel text-sm mt-1">Sé el primero en compartir tu experiencia</p>
+          {!isAuthenticated && (
+            <Link
+              href={ROUTES.auth.login}
+              className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-brand-wine/40 text-brand-wine text-sm font-semibold hover:bg-brand-wine/10 transition-colors"
+            >
+              Inicia sesión para reseñar
+            </Link>
+          )}
+        </div>
+        {isAuthenticated && !showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-brand-wine/30 text-brand-wine text-sm font-semibold hover:bg-brand-wine/10 transition-colors"
+          >
+            <PenLine className="h-4 w-4" /> Escribir reseña
+          </button>
+        )}
+        {isAuthenticated && showForm && (
+          <ReviewForm packageId={packageId} onClose={() => setShowForm(false)} />
+        )}
       </div>
     )
   }
@@ -56,16 +81,30 @@ export function ReviewList({ packageId }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* Write review toggle */}
+      {isAuthenticated && !showForm && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors"
+          >
+            <PenLine className="h-4 w-4" /> Escribir reseña
+          </button>
+        </div>
+      )}
+
+      {/* Inline form */}
+      {isAuthenticated && showForm && (
+        <ReviewForm packageId={packageId} onClose={() => setShowForm(false)} />
+      )}
+
       {/* Summary bar */}
       <div className="flex items-center gap-4 p-4 rounded-xl bg-brand-dark border border-brand-steel/10">
         <div className="text-center">
           <p className="font-display text-4xl font-bold text-white">{avgOverall.toFixed(1)}</p>
           <div className="flex items-center justify-center gap-0.5 mt-1">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3.5 w-3.5 ${i < Math.round(avgOverall) ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`}
-              />
+              <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(avgOverall) ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`} />
             ))}
           </div>
           <p className="text-xs text-brand-steel mt-1">{reviews.length} reseña{reviews.length !== 1 ? 's' : ''}</p>
@@ -91,7 +130,6 @@ export function ReviewList({ packageId }: Props) {
       {/* Review cards */}
       {reviews.map((review) => (
         <div key={review.id} className="rounded-xl bg-brand-dark border border-brand-steel/10 p-5 space-y-3">
-          {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -106,21 +144,14 @@ export function ReviewList({ packageId }: Props) {
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${i < review.overall_rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`}
-                />
+                <Star key={i} className={`h-4 w-4 ${i < review.overall_rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/30'}`} />
               ))}
             </div>
           </div>
-
-          {/* Title + comment */}
           <div>
             <p className="font-semibold text-white text-sm mb-1">{review.title}</p>
             <p className="text-brand-silver text-sm leading-relaxed">{review.comment}</p>
           </div>
-
-          {/* Sub-ratings */}
           {(review.accommodation_rating || review.transport_rating || review.guide_rating || review.value_rating) && (
             <div className="grid grid-cols-2 gap-1.5 pt-3 border-t border-brand-steel/10">
               <StarRow rating={review.accommodation_rating} label="Alojamiento" />
@@ -129,8 +160,6 @@ export function ReviewList({ packageId }: Props) {
               <StarRow rating={review.value_rating} label="Calidad-precio" />
             </div>
           )}
-
-          {/* Pros / Cons */}
           {(review.pros || review.cons) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-brand-steel/10">
               {review.pros && (
