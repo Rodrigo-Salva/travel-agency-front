@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Clock, MapPin, ArrowRight, Heart } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -18,6 +19,7 @@ interface Props {
 
 export function PackageCard({ pkg }: Props) {
   const { isAuthenticated } = useAuthStore()
+  const router = useRouter()
   const qc = useQueryClient()
 
   const imageUrl = pkg.image
@@ -39,7 +41,7 @@ export function PackageCard({ pkg }: Props) {
       qc.invalidateQueries({ queryKey: ['wishlist'] })
       toast.success(added ? 'Agregado a tu lista de deseos' : 'Eliminado de tu lista de deseos')
     },
-    onError: () => toast.error('Inicia sesión para guardar paquetes'),
+    onError: () => toast.error('No se pudo actualizar la lista de deseos'),
   })
 
   return (
@@ -66,7 +68,14 @@ export function PackageCard({ pkg }: Props) {
 
         {/* Wishlist button */}
         <button
-          onClick={e => { e.preventDefault(); toggleWishlist.mutate() }}
+          onClick={e => {
+            e.preventDefault()
+            if (!isAuthenticated) {
+              router.push(ROUTES.auth.login)
+              return
+            }
+            toggleWishlist.mutate()
+          }}
           className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${wishlistItem ? 'bg-brand-wine text-white' : 'bg-brand-darkest/70 text-brand-steel hover:text-brand-rose'}`}
         >
           <Heart className={`h-4 w-4 ${wishlistItem ? 'fill-white' : ''}`} />
