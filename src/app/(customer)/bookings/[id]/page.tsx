@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   ChevronLeft, CalendarDays, Users, Clock, CheckCircle2, XCircle,
-  AlertCircle, Loader2, MapPin, DollarSign, FileText, User
+  AlertCircle, Loader2, MapPin, DollarSign, FileText, User, Printer
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { bookingsApi } from '@/features/bookings/api/bookings.api'
@@ -95,6 +95,19 @@ export default function BookingDetailPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media print {
+          nav, header, footer, .print-hide { display: none !important; }
+          body { background: white !important; color: #111 !important; }
+          .bg-brand-darkest, .bg-brand-dark { background: white !important; }
+          .text-white { color: #111 !important; }
+          .text-brand-silver { color: #444 !important; }
+          .text-brand-steel { color: #666 !important; }
+          .border-brand-steel\\/10 { border-color: #ddd !important; }
+          .rounded-2xl, .rounded-xl { border: 1px solid #ddd; }
+        }
+      `}</style>
 
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
 
@@ -198,6 +211,20 @@ export default function BookingDetailPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Factura */}
+        <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6 print-hide">
+          <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+            <Printer className="h-4 w-4 text-brand-wine" /> Factura
+          </h2>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-sm font-medium hover:bg-brand-wine hover:text-white transition-colors"
+          >
+            <Printer className="h-4 w-4" /> Imprimir / Guardar PDF
+          </button>
+          <p className="text-xs text-brand-steel mt-2">En el diálogo de impresión elige "Guardar como PDF" para descargar.</p>
         </div>
 
         {/* Acciones */}
