@@ -15,8 +15,7 @@ export interface WishlistItem {
 export const wishlistApi = {
   async list(): Promise<WishlistItem[]> {
     const { data } = await apiClient.get(API.wishlist)
-    if ('results' in data) return data.results ?? []
-    return data.items ?? data ?? []
+    return data.favoritos ?? data.results ?? data.items ?? []
   },
 
   async add(packageId: number): Promise<WishlistItem> {
