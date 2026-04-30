@@ -170,3 +170,14 @@
     box-shadow: 0 0 20px rgba(98, 35, 71, 0.3);
   }
 }
+
+/* Hero animations */
+@keyframes kenburns {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.15) translate(-1%, -1%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
