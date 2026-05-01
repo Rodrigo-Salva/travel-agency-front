@@ -27,6 +27,7 @@ export const API = {
   reviews: 'reviews/',
   review: (id: number) => `reviews/${id}/`,
   coupons: 'promotions/coupons/',
+  validateCoupon: 'promotions/coupons/validate/',
   wishlist: 'promotions/wishlists/',
   wishlistItem: (id: number) => `promotions/wishlists/${id}/`,
   inquiries: 'inquiries/',

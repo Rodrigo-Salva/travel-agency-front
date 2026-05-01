@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Route groups that require authentication
-const CUSTOMER_PATHS = ['/dashboard', '/bookings', '/profile', '/wishlist', '/reviews/new']
+const CUSTOMER_PATHS = ['/dashboard', '/bookings', '/profile', '/wishlist', '/reviews']
 const ADMIN_PATHS = ['/admin']
 const AUTH_PATHS = ['/login', '/register']
 
