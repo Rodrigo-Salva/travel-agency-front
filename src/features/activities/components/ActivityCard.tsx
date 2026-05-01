@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, Users, Zap, Mountain, Smile } from 'lucide-react'
+import { Clock, Users, Zap, Mountain, Smile, ArrowRight } from 'lucide-react'
 import { formatPrice } from '@/lib/utils/format'
+import { ROUTES } from '@/lib/constants/routes'
 import type { Activity, ActivityType, DifficultyLevel } from '../types/activity.types'
 
 interface Props {
@@ -35,25 +37,19 @@ export function ActivityCard({ activity }: Props) {
   const DiffIcon = diff.icon
 
   return (
-    <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden hover:border-brand-wine/30 transition-all duration-300 flex flex-col">
-      {/* Image */}
+    <Link
+      href={ROUTES.activity(activity.id)}
+      className="group rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden hover:border-brand-wine/30 transition-all duration-300 flex flex-col"
+    >
       <div className="relative h-44 bg-brand-darkest overflow-hidden">
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={activity.name}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+          <Image src={imageUrl} alt={activity.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-b from-brand-wine/10 to-brand-darkest flex items-center justify-center">
             <Zap className="h-10 w-10 text-brand-steel/30" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest/60 to-transparent" />
-
-        {/* Type badge */}
         <div className="absolute top-3 left-3">
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-brand-darkest/80 border border-brand-steel/20 text-brand-silver">
             {ACTIVITY_LABELS[activity.activity_type]}
@@ -61,9 +57,8 @@ export function ActivityCard({ activity }: Props) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-semibold text-white text-sm leading-snug mb-2 line-clamp-2">{activity.name}</h3>
+        <h3 className="font-semibold text-white text-sm leading-snug mb-2 line-clamp-2 group-hover:text-brand-rose transition-colors">{activity.name}</h3>
 
         <p className="text-xs text-brand-steel line-clamp-2 mb-3 flex-1">{activity.description}</p>
 
@@ -87,9 +82,12 @@ export function ActivityCard({ activity }: Props) {
             <p className="text-xs text-brand-steel">Por persona</p>
             <p className="font-display text-lg font-bold text-white">{formatPrice(activity.price_per_person)}</p>
           </div>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-wine/20 group-hover:bg-brand-wine text-brand-rose group-hover:text-white transition-all">
+            <ArrowRight className="h-4 w-4" />
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

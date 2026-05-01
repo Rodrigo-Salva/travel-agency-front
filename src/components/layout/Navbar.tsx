@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Globe, Plane, Hotel, Activity, MapPin, ChevronDown, User, BookOpen, Heart, LogOut } from 'lucide-react'
+import { Menu, X, Globe, Plane, Hotel, Activity, MapPin, ChevronDown, User, BookOpen, Heart, Star, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -115,6 +115,13 @@ export function Navbar() {
                     >
                       <Heart className="h-4 w-4" />
                       Lista de Deseos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => router.push(ROUTES.customer.reviews)}
+                      className="flex items-center gap-2 text-brand-silver cursor-pointer"
+                    >
+                      <Star className="h-4 w-4" />
+                      Mis Reseñas
                     </DropdownMenuItem>
                   </>
                 )}

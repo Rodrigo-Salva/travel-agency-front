@@ -149,6 +149,7 @@ export default function DashboardPage() {
               {[
                 { label: 'Mis reservas',     href: ROUTES.customer.bookings,  icon: CalendarCheck, desc: 'Ver y gestionar' },
                 { label: 'Lista de deseos',  href: ROUTES.customer.wishlist,  icon: Heart,         desc: 'Paquetes guardados' },
+                { label: 'Mis reseñas',      href: ROUTES.customer.reviews,   icon: Star,          desc: 'Ver mis opiniones' },
                 { label: 'Explorar destinos',href: ROUTES.destinations,       icon: MapPin,        desc: 'Buscar destinos' },
                 { label: 'Ver paquetes',     href: ROUTES.packages,           icon: Package,       desc: 'Todos los paquetes' },
                 { label: 'Mi perfil',        href: ROUTES.customer.profile,   icon: User,          desc: 'Editar datos' },

@@ -24,6 +24,7 @@ export const ROUTES = {
     booking: (id: number) => `/bookings/${id}`,
     newBooking: '/bookings/new',
     wishlist: '/wishlist',
+    reviews: '/reviews',
     newReview: '/reviews/new',
   },
 
