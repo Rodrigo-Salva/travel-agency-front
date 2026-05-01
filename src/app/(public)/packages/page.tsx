@@ -1,14 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { usePackages } from '@/features/packages/hooks/usePackages'
 import { PackageCard, PackageCardSkeleton } from '@/features/packages/components/PackageCard'
 import { PackageFiltersBar } from '@/features/packages/components/PackageFilters'
 import type { PackageFilters } from '@/features/packages/types/package.types'
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react'
 
-export default function PackagesPage() {
-  const [filters, setFilters] = useState<PackageFilters>({ page: 1, page_size: 12 })
+function PackagesContent() {
+  const searchParams = useSearchParams()
+  const initialSearch = searchParams.get('search') ?? ''
+  const [filters, setFilters] = useState<PackageFilters>({ page: 1, page_size: 12, search: initialSearch || undefined })
+
+  useEffect(() => {
+    const s = searchParams.get('search')
+    if (s) setFilters(prev => ({ ...prev, search: s, page: 1 }))
+  }, [searchParams])
   const { data, isLoading } = usePackages(filters)
 
   const totalPages = data ? Math.ceil(data.count / (filters.page_size ?? 12)) : 0
@@ -115,5 +123,13 @@ export default function PackagesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PackagesPage() {
+  return (
+    <Suspense>
+      <PackagesContent />
+    </Suspense>
   )
 }

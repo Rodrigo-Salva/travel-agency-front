@@ -61,7 +61,15 @@ export function WizardStep2() {
   })
 
   const onSubmit = (data: FormData) => {
-    setPassengers(data.passengers as any)
+    const cleaned = data.passengers.map(p => ({
+      ...p,
+      title:          p.title          || undefined,
+      gender:         p.gender         || undefined,
+      date_of_birth:  p.date_of_birth  || undefined,
+      passport_number: p.passport_number || undefined,
+      nationality:    p.nationality    || undefined,
+    }))
+    setPassengers(cleaned as any)
     nextStep()
   }
 

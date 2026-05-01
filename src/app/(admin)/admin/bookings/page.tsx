@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarCheck, Search, Loader2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { CalendarCheck, Search, Loader2, XCircle, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api/client'
 import { API } from '@/lib/api/endpoints'
 import { formatPrice, formatDate } from '@/lib/utils/format'
+import { ROUTES } from '@/lib/constants/routes'
 import { queryKeys } from '@/lib/query/keys'
 import type { BookingStatus, PaymentStatus } from '@/features/bookings/types/booking.types'
 
@@ -180,7 +182,11 @@ export default function AdminBookingsPage() {
               <tbody className="divide-y divide-brand-steel/10">
                 {bookings.map((b) => (
                   <tr key={b.id} className="hover:bg-brand-steel/5 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-brand-silver">#{b.booking_number}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-brand-silver">
+                      <Link href={ROUTES.admin.booking(b.id)} className="hover:text-brand-wine transition-colors">
+                        #{b.booking_number}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-brand-silver whitespace-nowrap">
                       {b.travel_date ? formatDate(b.travel_date) : '—'}
                     </td>
@@ -199,20 +205,28 @@ export default function AdminBookingsPage() {
                       {formatPrice(b.total_amount)}
                     </td>
                     <td className="px-4 py-3">
-                      {(b.status === 'pending' || b.status === 'confirmed') && (
-                        <button
-                          onClick={() => cancelMutation.mutate(b.id)}
-                          disabled={cancelMutation.isPending}
-                          className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={ROUTES.admin.booking(b.id)}
+                          className="flex items-center gap-1 text-xs text-brand-silver hover:text-white transition-colors"
                         >
-                          {cancelMutation.isPending ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <XCircle className="h-3.5 w-3.5" />
-                          )}
-                          Cancelar
-                        </button>
-                      )}
+                          <Eye className="h-3.5 w-3.5" /> Ver
+                        </Link>
+                        {(b.status === 'pending' || b.status === 'confirmed') && (
+                          <button
+                            onClick={() => cancelMutation.mutate(b.id)}
+                            disabled={cancelMutation.isPending}
+                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                          >
+                            {cancelMutation.isPending ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <XCircle className="h-3.5 w-3.5" />
+                            )}
+                            Cancelar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
