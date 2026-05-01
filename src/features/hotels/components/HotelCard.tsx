@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import Image from 'next/image'
-import { Star, MapPin, Clock, Wifi } from 'lucide-react'
+import { Star, MapPin, Clock, ArrowRight } from 'lucide-react'
 import { formatPrice } from '@/lib/utils/format'
+import { ROUTES } from '@/lib/constants/routes'
 import type { Hotel } from '../types/hotel.types'
 
 interface Props {
@@ -13,10 +15,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`h-3 w-3 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/40'}`}
-        />
+        <Star key={i} className={`h-3 w-3 ${i < rating ? 'text-amber-400 fill-amber-400' : 'text-brand-steel/40'}`} />
       ))}
     </div>
   )
@@ -32,17 +31,13 @@ export function HotelCard({ hotel }: Props) {
     : []
 
   return (
-    <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden hover:border-brand-wine/30 transition-all duration-300 flex flex-col">
-      {/* Image */}
+    <Link
+      href={ROUTES.hotel(hotel.id)}
+      className="group rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden hover:border-brand-wine/30 transition-all duration-300 flex flex-col"
+    >
       <div className="relative h-48 bg-brand-darkest overflow-hidden">
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={hotel.name}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+          <Image src={imageUrl} alt={hotel.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-b from-brand-steel/10 to-brand-darkest flex items-center justify-center">
             <Star className="h-10 w-10 text-brand-steel/30" />
@@ -54,14 +49,13 @@ export function HotelCard({ hotel }: Props) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start gap-1.5 text-brand-wine text-xs font-medium mb-1">
           <MapPin className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
           {hotel.destination.name}, {hotel.destination.country}
         </div>
 
-        <h3 className="font-semibold text-white text-sm leading-snug mb-2">{hotel.name}</h3>
+        <h3 className="font-semibold text-white text-sm leading-snug mb-2 group-hover:text-brand-rose transition-colors">{hotel.name}</h3>
 
         {hotel.address && (
           <p className="text-xs text-brand-steel line-clamp-1 mb-2">{hotel.address}</p>
@@ -70,23 +64,16 @@ export function HotelCard({ hotel }: Props) {
         {amenitiesList.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3 flex-1">
             {amenitiesList.map((a) => (
-              <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-brand-darkest border border-brand-steel/20 text-brand-silver">
-                {a}
-              </span>
+              <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-brand-darkest border border-brand-steel/20 text-brand-silver">{a}</span>
             ))}
           </div>
         )}
 
         <div className="flex items-center gap-3 text-xs text-brand-steel mb-3">
           {hotel.check_in_time && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              Check-in: {hotel.check_in_time.slice(0, 5)}
-            </span>
+            <span className="flex items-center gap-1"><Clock className="h-3 w-3" />Check-in: {hotel.check_in_time.slice(0, 5)}</span>
           )}
-          {hotel.check_out_time && (
-            <span>Check-out: {hotel.check_out_time.slice(0, 5)}</span>
-          )}
+          {hotel.check_out_time && <span>Check-out: {hotel.check_out_time.slice(0, 5)}</span>}
         </div>
 
         <div className="flex items-center justify-between pt-3 border-t border-brand-steel/10 mt-auto">
@@ -97,12 +84,12 @@ export function HotelCard({ hotel }: Props) {
               <span className="text-xs font-normal text-brand-steel ml-1">/noche</span>
             </p>
           </div>
-          <span className="text-xs text-brand-silver bg-brand-darkest border border-brand-steel/20 px-2.5 py-1 rounded-full">
-            {hotel.total_rooms} hab.
-          </span>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-wine/20 group-hover:bg-brand-wine text-brand-rose group-hover:text-white transition-all">
+            <ArrowRight className="h-4 w-4" />
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
