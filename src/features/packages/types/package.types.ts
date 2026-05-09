@@ -68,6 +68,7 @@ export interface PackageFilters {
   min_price?: number
   max_price?: number
   min_days?: number
+  max_days?: number
   search?: string
   ordering?: string
   page?: number
