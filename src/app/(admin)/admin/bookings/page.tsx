@@ -82,6 +82,7 @@ interface BookingSummary {
   status: BookingStatus
   payment_status: PaymentStatus
   total_amount: string
+  customer: { id: number; email: string; first_name: string; last_name: string } | number | null
 }
 
 export default function AdminBookingsPage() {
@@ -172,7 +173,7 @@ export default function AdminBookingsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-brand-steel/10">
-                  {['N° Reserva', 'Salida', 'Pasajeros', 'Estado', 'Pago', 'Total', 'Acciones'].map((h) => (
+                  {['N° Reserva', 'Cliente', 'Salida', 'Pasajeros', 'Estado', 'Pago', 'Total', 'Acciones'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-brand-steel uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -186,6 +187,11 @@ export default function AdminBookingsPage() {
                       <Link href={ROUTES.admin.booking(b.id)} className="hover:text-brand-wine transition-colors">
                         #{b.booking_number}
                       </Link>
+                    </td>
+                    <td className="px-4 py-3 text-brand-silver text-sm">
+                      {typeof b.customer === 'object' && b.customer
+                        ? <span>{b.customer.first_name} {b.customer.last_name}</span>
+                        : <span className="text-brand-steel text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3 text-brand-silver whitespace-nowrap">
                       {b.travel_date ? formatDate(b.travel_date) : '—'}

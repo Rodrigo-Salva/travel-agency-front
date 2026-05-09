@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,10 @@ export function HeroSection() {
   const router = useRouter()
   const [destination, setDestination] = useState('')
   const [travelers, setTravelers] = useState(2)
-  const [imgIdx] = useState(() => Math.floor(Math.random() * HERO_IMAGES.length))
+  const [imgIdx, setImgIdx] = useState(0)
+  useEffect(() => {
+    setImgIdx(Math.floor(Math.random() * HERO_IMAGES.length))
+  }, [])
 
   function handleSearch() {
     const params = new URLSearchParams()

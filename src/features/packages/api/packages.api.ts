@@ -11,6 +11,7 @@ function buildParams(filters: PackageFilters): Record<string, string> {
   if (filters.min_price) params.min_price = String(filters.min_price)
   if (filters.max_price) params.max_price = String(filters.max_price)
   if (filters.min_days) params.min_days = String(filters.min_days)
+  if (filters.max_days) params.max_days = String(filters.max_days)
   if (filters.search) params.search = filters.search
   if (filters.ordering) params.ordering = filters.ordering
   if (filters.page) params.page = String(filters.page)
