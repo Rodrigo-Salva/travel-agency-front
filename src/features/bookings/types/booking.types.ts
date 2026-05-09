@@ -57,6 +57,23 @@ export interface CreateBookingResponse {
   detalles: BookingDetail
 }
 
+// Stripe payment types
+export interface CreatePaymentIntentResponse {
+  exito: boolean
+  mensaje: string
+  client_secret: string
+  payment_intent_id: string
+  amount: string
+  currency: string
+}
+
+export interface ConfirmPaymentResponse {
+  exito: boolean
+  mensaje: string
+  numero_reserva: string
+  detalles: BookingDetail
+}
+
 // Wizard state
 export interface WizardState {
   // Step 1 — Fechas y pasajeros

@@ -24,6 +24,8 @@ export const API = {
   booking: (id: number) => `bookings/${id}/`,
   cancelBooking: (id: number) => `bookings/${id}/cancel/`,
   myBookings: 'bookings/my_bookings/',
+  createPaymentIntent: (id: number) => `bookings/${id}/create_payment_intent/`,
+  confirmPayment: (id: number) => `bookings/${id}/confirm_payment/`,
   reviews: 'reviews/',
   review: (id: number) => `reviews/${id}/`,
   coupons: 'promotions/coupons/',
@@ -32,4 +34,8 @@ export const API = {
   wishlistItem: (id: number) => `promotions/wishlists/${id}/`,
   inquiries: 'inquiries/',
   inquiry: (id: number) => `inquiries/${id}/`,
+  adminMetrics: 'bookings/metrics/',
+  notifications: 'auth/notifications/',
+  markAllRead: 'auth/notifications/mark_all_read/',
+  markRead: (id: number) => `auth/notifications/${id}/mark_read/`,
 } as const
