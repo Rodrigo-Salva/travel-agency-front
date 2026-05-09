@@ -113,125 +113,146 @@ export default function AdminBookingDetailPage() {
   const customer = typeof booking.customer === 'object' ? booking.customer : null
   const pkg = typeof booking.package === 'object' ? booking.package : null
 
+  const initials = customer
+    ? `${customer.first_name[0] ?? ''}${customer.last_name[0] ?? ''}`.toUpperCase()
+    : '?'
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <button
-            onClick={() => router.push(ROUTES.admin.bookings)}
-            className="flex items-center gap-1 text-brand-silver hover:text-white text-sm mb-3 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" /> Reservas
-          </button>
-          <p className="font-mono text-xs text-brand-steel mb-1">#{booking.booking_number}</p>
-          <h1 className="font-display text-2xl font-bold text-white">Detalle de reserva</h1>
-          <p className="text-brand-steel text-sm mt-1">Creada el {formatDate(booking.booking_date)}</p>
+    <div className="max-w-6xl mx-auto space-y-6 p-6">
+
+      {/* ── Header ── */}
+      <div>
+        <button
+          onClick={() => router.push(ROUTES.admin.bookings)}
+          className="flex items-center gap-1.5 text-brand-steel hover:text-white text-xs font-medium mb-4 transition-colors group"
+        >
+          <ChevronLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          Volver a reservas
+        </button>
+
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="font-mono text-xs text-brand-steel/60 mb-1 tracking-widest">#{booking.booking_number}</p>
+            <h1 className="font-display text-2xl font-bold text-white">Detalle de reserva</h1>
+            <p className="text-brand-steel text-sm mt-1">Creada el {formatDate(booking.booking_date)}</p>
+          </div>
+          <span className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl border ${st.classes}`}>
+            <StatusIcon className="h-4 w-4" />
+            {st.label}
+          </span>
         </div>
-        <span className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full border ${st.classes}`}>
-          <StatusIcon className="h-4 w-4" />{st.label}
-        </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column */}
-        <div className="lg:col-span-2 space-y-5">
+        {/* ── Columna izquierda ── */}
+        <div className="lg:col-span-2 space-y-4">
 
-          {/* Customer */}
-          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <User className="h-4 w-4 text-brand-wine" /> Cliente
-            </h2>
+          {/* Cliente */}
+          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+              <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-brand-rose" />
+              </div>
+              <h2 className="font-semibold text-white">Cliente</h2>
+            </div>
             {customer ? (
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-brand-steel">Nombre</span>
-                  <span className="text-white font-medium">{customer.first_name} {customer.last_name}</span>
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-wine to-brand-rose flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+                  {initials}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-brand-steel">Email</span>
-                  <span className="text-white">{customer.email}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-base">{customer.first_name} {customer.last_name}</p>
+                  <p className="text-brand-steel text-sm mt-0.5">{customer.email}</p>
+                  {customer.phone && <p className="text-brand-steel/60 text-xs mt-0.5">{customer.phone}</p>}
                 </div>
-                {customer.phone && (
-                  <div className="flex justify-between">
-                    <span className="text-brand-steel">Teléfono</span>
-                    <span className="text-white">{customer.phone}</span>
-                  </div>
-                )}
               </div>
             ) : (
-              <p className="text-brand-steel text-sm">ID cliente: {booking.customer as number}</p>
+              <p className="px-5 py-4 text-brand-steel text-sm">Cliente #{booking.customer as number}</p>
             )}
           </div>
 
-          {/* Package + travel */}
-          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <Package className="h-4 w-4 text-brand-wine" /> Viaje
-            </h2>
-            {pkg && (
-              <div className="mb-4 pb-4 border-b border-brand-steel/10">
-                <p className="text-brand-steel text-xs">Paquete</p>
-                <p className="text-white font-semibold">{pkg.name}</p>
+          {/* Paquete + fechas */}
+          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+              <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                <Package className="h-4 w-4 text-brand-rose" />
               </div>
-            )}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-              {booking.travel_date && (
-                <div>
-                  <p className="text-brand-steel text-xs uppercase tracking-wider mb-1">Salida</p>
-                  <div className="flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4 text-brand-wine" />
-                    <p className="text-white font-medium">{formatDate(booking.travel_date)}</p>
-                  </div>
-                </div>
-              )}
-              {booking.return_date && (
-                <div>
-                  <p className="text-brand-steel text-xs uppercase tracking-wider mb-1">Regreso</p>
-                  <div className="flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4 text-brand-steel" />
-                    <p className="text-white font-medium">{formatDate(booking.return_date)}</p>
-                  </div>
-                </div>
-              )}
-              <div>
-                <p className="text-brand-steel text-xs uppercase tracking-wider mb-1">Pasajeros</p>
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-brand-steel" />
-                  <p className="text-white font-medium">
-                    {booking.num_adults}A
-                    {booking.num_children > 0 ? ` · ${booking.num_children}N` : ''}
-                    {booking.num_infants > 0 ? ` · ${booking.num_infants}I` : ''}
-                  </p>
-                </div>
-              </div>
+              <h2 className="font-semibold text-white">Paquete y viaje</h2>
             </div>
-            {booking.special_requests && (
-              <div className="mt-4 pt-4 border-t border-brand-steel/10">
-                <p className="text-brand-steel text-xs uppercase tracking-wider mb-1">Solicitudes especiales</p>
-                <p className="text-brand-silver text-sm">{booking.special_requests}</p>
+            <div className="px-5 py-4 space-y-4">
+              {pkg && (
+                <div className="rounded-xl bg-brand-darkest/60 border border-brand-steel/10 px-4 py-3">
+                  <p className="text-brand-steel text-xs uppercase tracking-widest mb-1">Paquete</p>
+                  <p className="text-white font-semibold text-base">{pkg.name}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-3 gap-3">
+                {booking.travel_date && (
+                  <div className="rounded-xl bg-brand-darkest/40 border border-brand-steel/10 px-4 py-3">
+                    <p className="text-brand-steel text-xs uppercase tracking-widest mb-1.5">Salida</p>
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="h-3.5 w-3.5 text-brand-wine flex-shrink-0" />
+                      <p className="text-white font-medium text-sm">{formatDate(booking.travel_date)}</p>
+                    </div>
+                  </div>
+                )}
+                {booking.return_date && (
+                  <div className="rounded-xl bg-brand-darkest/40 border border-brand-steel/10 px-4 py-3">
+                    <p className="text-brand-steel text-xs uppercase tracking-widest mb-1.5">Regreso</p>
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="h-3.5 w-3.5 text-brand-steel flex-shrink-0" />
+                      <p className="text-white font-medium text-sm">{formatDate(booking.return_date)}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="rounded-xl bg-brand-darkest/40 border border-brand-steel/10 px-4 py-3">
+                  <p className="text-brand-steel text-xs uppercase tracking-widest mb-1.5">Pasajeros</p>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-brand-steel flex-shrink-0" />
+                    <p className="text-white font-medium text-sm">
+                      {booking.num_adults} adulto{booking.num_adults !== 1 ? 's' : ''}
+                      {booking.num_children > 0 ? `, ${booking.num_children} niño${booking.num_children !== 1 ? 's' : ''}` : ''}
+                      {booking.num_infants > 0 ? `, ${booking.num_infants} infante${booking.num_infants !== 1 ? 's' : ''}` : ''}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+              {booking.special_requests && (
+                <div className="rounded-xl bg-amber-500/5 border border-amber-500/15 px-4 py-3">
+                  <p className="text-amber-400/70 text-xs uppercase tracking-widest mb-1">Solicitudes especiales</p>
+                  <p className="text-amber-200 text-sm">{booking.special_requests}</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Passengers */}
+          {/* Pasajeros */}
           {booking.passengers && booking.passengers.length > 0 && (
-            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-              <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-brand-wine" /> Pasajeros ({booking.passengers.length})
-              </h2>
-              <div className="space-y-2">
+            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+                <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-brand-rose" />
+                </div>
+                <h2 className="font-semibold text-white">Pasajeros</h2>
+                <span className="ml-auto text-xs font-medium text-brand-steel bg-brand-steel/10 px-2 py-0.5 rounded-full">
+                  {booking.passengers.length}
+                </span>
+              </div>
+              <div className="divide-y divide-brand-steel/10">
                 {booking.passengers.map((p, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-brand-darkest/50 border border-brand-steel/10">
-                    <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-brand-rose" />
+                  <div key={i} className="flex items-center gap-4 px-5 py-3">
+                    <div className="w-9 h-9 rounded-full bg-brand-steel/10 flex items-center justify-center flex-shrink-0 text-brand-silver text-xs font-bold">
+                      {p.first_name[0]}{p.last_name[0]}
                     </div>
                     <div className="flex-1">
                       <p className="text-white font-medium text-sm">{p.title ? `${p.title} ` : ''}{p.first_name} {p.last_name}</p>
-                      <p className="text-brand-steel text-xs">{PASSENGER_TYPE[p.passenger_type] ?? p.passenger_type}{p.nationality ? ` · ${p.nationality}` : ''}</p>
+                      <p className="text-brand-steel text-xs">
+                        {PASSENGER_TYPE[p.passenger_type] ?? p.passenger_type}
+                        {p.nationality ? ` · ${p.nationality}` : ''}
+                      </p>
                     </div>
                     {p.passport_number && (
-                      <p className="text-brand-steel text-xs font-mono">{p.passport_number}</p>
+                      <p className="text-brand-steel/60 text-xs font-mono bg-brand-darkest px-2 py-1 rounded-md">{p.passport_number}</p>
                     )}
                   </div>
                 ))}
@@ -241,16 +262,19 @@ export default function AdminBookingDetailPage() {
 
           {/* Hotel bookings */}
           {booking.hotel_bookings && booking.hotel_bookings.length > 0 && (
-            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-              <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Hotel className="h-4 w-4 text-brand-wine" /> Hoteles reservados
-              </h2>
-              <div className="space-y-2">
+            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+                <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                  <Hotel className="h-4 w-4 text-brand-rose" />
+                </div>
+                <h2 className="font-semibold text-white">Hoteles</h2>
+              </div>
+              <div className="divide-y divide-brand-steel/10">
                 {booking.hotel_bookings.map((h) => (
-                  <div key={h.id} className="flex items-center justify-between p-3 rounded-xl bg-brand-darkest/50 border border-brand-steel/10 text-sm">
+                  <div key={h.id} className="flex items-center justify-between px-5 py-3">
                     <div>
-                      <p className="text-white font-medium">Hotel #{h.hotel}</p>
-                      <p className="text-brand-steel text-xs">{formatDate(h.check_in_date)} → {formatDate(h.check_out_date)}</p>
+                      <p className="text-white font-medium text-sm">Hotel #{h.hotel}</p>
+                      <p className="text-brand-steel text-xs mt-0.5">{formatDate(h.check_in_date)} → {formatDate(h.check_out_date)}</p>
                     </div>
                     <p className="text-white font-semibold">{formatPrice(h.total_price)}</p>
                   </div>
@@ -261,16 +285,22 @@ export default function AdminBookingDetailPage() {
 
           {/* Flight bookings */}
           {booking.flight_bookings && booking.flight_bookings.length > 0 && (
-            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-              <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Plane className="h-4 w-4 text-brand-wine" /> Vuelos reservados
-              </h2>
-              <div className="space-y-2">
+            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+                <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                  <Plane className="h-4 w-4 text-brand-rose" />
+                </div>
+                <h2 className="font-semibold text-white">Vuelos</h2>
+              </div>
+              <div className="divide-y divide-brand-steel/10">
                 {booking.flight_bookings.map((f) => (
-                  <div key={f.id} className="flex items-center justify-between p-3 rounded-xl bg-brand-darkest/50 border border-brand-steel/10 text-sm">
+                  <div key={f.id} className="flex items-center justify-between px-5 py-3">
                     <div>
-                      <p className="text-white font-medium">Vuelo #{f.flight}</p>
-                      <p className="text-brand-steel text-xs">{f.num_passengers} pasajero{f.num_passengers !== 1 ? 's' : ''}{f.pnr_number ? ` · PNR: ${f.pnr_number}` : ''}</p>
+                      <p className="text-white font-medium text-sm">Vuelo #{f.flight}</p>
+                      <p className="text-brand-steel text-xs mt-0.5">
+                        {f.num_passengers} pasajero{f.num_passengers !== 1 ? 's' : ''}
+                        {f.pnr_number ? ` · PNR: ${f.pnr_number}` : ''}
+                      </p>
                     </div>
                     <p className="text-white font-semibold">{formatPrice(f.total_price)}</p>
                   </div>
@@ -280,49 +310,59 @@ export default function AdminBookingDetailPage() {
           )}
         </div>
 
-        {/* Right sidebar */}
-        <div className="space-y-5">
-          {/* Payment summary */}
-          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-brand-wine" /> Pago
-            </h2>
-            <div className="space-y-2 text-sm">
+        {/* ── Sidebar derecha ── */}
+        <div className="space-y-4">
+
+          {/* Resumen de pago */}
+          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-brand-steel/10">
+              <div className="w-8 h-8 rounded-lg bg-brand-wine/10 flex items-center justify-center">
+                <DollarSign className="h-4 w-4 text-brand-rose" />
+              </div>
+              <h2 className="font-semibold text-white">Resumen de pago</h2>
+            </div>
+
+            {/* Total destacado */}
+            <div className="px-5 py-4 bg-gradient-to-br from-brand-wine/10 to-transparent border-b border-brand-steel/10">
+              <p className="text-brand-steel text-xs uppercase tracking-widest mb-1">Total de la reserva</p>
+              <p className="font-display text-3xl font-bold text-white">{formatPrice(booking.total_amount)}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className={`w-2 h-2 rounded-full ${py.dot}`} />
+                <span className="text-sm font-medium" style={{ color: py.dot.includes('emerald') ? '#34d399' : py.dot.includes('amber') ? '#fbbf24' : py.dot.includes('red') ? '#f87171' : '#94a3b8' }}>
+                  {py.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Desglose */}
+            <div className="px-5 py-4 space-y-2.5 text-sm border-b border-brand-steel/10">
               <div className="flex justify-between">
-                <span className="text-brand-silver">Subtotal</span>
+                <span className="text-brand-steel">Subtotal</span>
                 <span className="text-white">{formatPrice(booking.subtotal)}</span>
               </div>
               {parseFloat(booking.discount_amount) > 0 && (
-                <div className="flex justify-between text-emerald-400">
-                  <span>Descuento</span>
-                  <span>− {formatPrice(booking.discount_amount)}</span>
+                <div className="flex justify-between">
+                  <span className="text-emerald-400">Descuento</span>
+                  <span className="text-emerald-400">− {formatPrice(booking.discount_amount)}</span>
                 </div>
               )}
               {parseFloat(booking.tax_amount) > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-brand-silver">Impuestos</span>
+                  <span className="text-brand-steel">Impuestos</span>
                   <span className="text-white">{formatPrice(booking.tax_amount)}</span>
                 </div>
               )}
-              <div className="flex justify-between pt-2 border-t border-brand-steel/10 font-semibold">
-                <span className="text-white">Total</span>
-                <span className="font-display text-lg text-white">{formatPrice(booking.total_amount)}</span>
-              </div>
               {parseFloat(booking.paid_amount) > 0 && (
-                <div className="flex justify-between text-emerald-400">
-                  <span>Pagado</span>
-                  <span>{formatPrice(booking.paid_amount)}</span>
+                <div className="flex justify-between pt-2 border-t border-brand-steel/10">
+                  <span className="text-emerald-400">Pagado</span>
+                  <span className="text-emerald-400 font-semibold">{formatPrice(booking.paid_amount)}</span>
                 </div>
               )}
             </div>
 
-            {/* Payment status */}
-            <div className="mt-4 pt-4 border-t border-brand-steel/10">
-              <p className="text-xs text-brand-steel uppercase tracking-wider mb-2">Estado de pago</p>
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-2 h-2 rounded-full ${py.dot}`} />
-                <span className="text-white font-medium text-sm">{py.label}</span>
-              </div>
+            {/* Cambiar pago */}
+            <div className="px-5 py-4">
+              <p className="text-xs text-brand-steel uppercase tracking-widest mb-2.5">Cambiar estado de pago</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {(['unpaid', 'partial', 'paid', 'refunded'] as PaymentStatus[])
                   .filter(s => s !== booking.payment_status)
@@ -331,7 +371,7 @@ export default function AdminBookingDetailPage() {
                       key={s}
                       onClick={() => updatePayment.mutate(s)}
                       disabled={updatePayment.isPending}
-                      className="px-2 py-1.5 rounded-lg border border-brand-steel/20 text-brand-steel hover:text-white hover:border-brand-wine/30 text-xs font-medium transition-colors disabled:opacity-40"
+                      className="px-2 py-2 rounded-lg border border-brand-steel/20 text-brand-steel hover:text-white hover:border-brand-wine/40 hover:bg-brand-wine/5 text-xs font-medium transition-all disabled:opacity-40"
                     >
                       {PAYMENT_LABELS[s]}
                     </button>
@@ -340,11 +380,13 @@ export default function AdminBookingDetailPage() {
             </div>
           </div>
 
-          {/* Status control */}
+          {/* Cambiar estado */}
           {st.next.length > 0 && (
-            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5">
-              <p className="text-xs text-brand-steel uppercase tracking-wider mb-3">Cambiar estado</p>
-              <div className="space-y-2">
+            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+              <div className="px-5 py-4 border-b border-brand-steel/10">
+                <p className="text-xs text-brand-steel uppercase tracking-widest">Cambiar estado</p>
+              </div>
+              <div className="px-5 py-4 space-y-2">
                 {st.next.map(s => {
                   const cfg = STATUS_CONFIG[s]
                   const Icon = cfg.icon
@@ -353,9 +395,11 @@ export default function AdminBookingDetailPage() {
                       key={s}
                       onClick={() => updateStatus.mutate(s)}
                       disabled={updateStatus.isPending}
-                      className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors disabled:opacity-40 ${cfg.classes} hover:opacity-80`}
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all disabled:opacity-40 hover:opacity-90 active:scale-[0.98] ${cfg.classes}`}
                     >
-                      {updateStatus.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+                      {updateStatus.isPending
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Icon className="h-4 w-4" />}
                       {STATUS_LABELS[s]}
                     </button>
                   )
@@ -364,8 +408,8 @@ export default function AdminBookingDetailPage() {
             </div>
           )}
 
-          {/* Timestamps */}
-          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5 space-y-2 text-sm">
+          {/* Metadatos */}
+          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 px-5 py-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-brand-steel">Creada</span>
               <span className="text-white">{formatDate(booking.booking_date)}</span>

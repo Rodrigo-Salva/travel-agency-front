@@ -1,18 +1,25 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   ChevronLeft, CalendarDays, Users, Clock, CheckCircle2, XCircle,
-  AlertCircle, Loader2, MapPin, DollarSign, FileText, User, Printer
+  AlertCircle, Loader2, MapPin, DollarSign, FileText, User, Printer, CreditCard
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { bookingsApi } from '@/features/bookings/api/bookings.api'
 import { formatPrice, formatDate } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants/routes'
 import type { BookingStatus, PaymentStatus } from '@/features/bookings/types/booking.types'
+
+// Stripe usa APIs del browser — no puede renderizarse en el servidor
+const PaymentModal = dynamic(
+  () => import('@/features/bookings/components/PaymentModal'),
+  { ssr: false }
+)
 
 const STATUS_CONFIG: Record<BookingStatus, { label: string; classes: string; icon: typeof CheckCircle2 }> = {
   pending:   { label: 'Pendiente',  classes: 'bg-amber-500/10 text-amber-400 border-amber-500/20',       icon: Clock },
@@ -37,6 +44,7 @@ export default function BookingDetailPage() {
   const router = useRouter()
   const qc = useQueryClient()
   const [confirming, setConfirming] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const { data: booking, isLoading, isError } = useQuery({
     queryKey: ['booking', Number(id)],
@@ -75,6 +83,7 @@ export default function BookingDetailPage() {
   const py = PAYMENT_CONFIG[booking.payment_status]
   const StatusIcon = st.icon
   const canCancel = booking.status === 'pending' || booking.status === 'confirmed'
+  const canPay = booking.payment_status !== 'paid' && booking.status !== 'cancelled' && booking.status !== 'completed'
 
   return (
     <div className="min-h-screen bg-brand-darkest">
@@ -111,7 +120,7 @@ export default function BookingDetailPage() {
 
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
 
-        {/* Resumen de viaje */}
+        {/* Detalles del viaje */}
         <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
           <h2 className="font-semibold text-white mb-5 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-brand-wine" /> Detalles del viaje
@@ -227,38 +236,54 @@ export default function BookingDetailPage() {
           <p className="text-xs text-brand-steel mt-2">En el diálogo de impresión elige "Guardar como PDF" para descargar.</p>
         </div>
 
-        {/* Acciones */}
-        {canCancel && (
-          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
+        {/* Acciones: pagar + cancelar */}
+        {(canPay || canCancel) && (
+          <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6 print-hide">
             <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
               <FileText className="h-4 w-4 text-brand-wine" /> Acciones
             </h2>
-            {confirming ? (
-              <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-brand-silver text-sm">¿Confirmas la cancelación?</p>
+            <div className="flex flex-col gap-3">
+
+              {/* Botón pagar */}
+              {canPay && (
                 <button
-                  onClick={() => cancel.mutate()}
-                  disabled={cancel.isPending}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                  onClick={() => setShowPaymentModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors w-fit"
                 >
-                  {cancel.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
-                  Sí, cancelar
+                  <CreditCard className="h-4 w-4" /> Pagar ahora
                 </button>
-                <button
-                  onClick={() => setConfirming(false)}
-                  className="px-4 py-2 rounded-xl border border-brand-steel/20 text-brand-silver text-sm font-medium hover:text-white transition-colors"
-                >
-                  No, mantener
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirming(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors"
-              >
-                <XCircle className="h-4 w-4" /> Cancelar reserva
-              </button>
-            )}
+              )}
+
+              {/* Botón cancelar */}
+              {canCancel && (
+                confirming ? (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-brand-silver text-sm">¿Confirmas la cancelación?</p>
+                    <button
+                      onClick={() => cancel.mutate()}
+                      disabled={cancel.isPending}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                    >
+                      {cancel.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                      Sí, cancelar
+                    </button>
+                    <button
+                      onClick={() => setConfirming(false)}
+                      className="px-4 py-2 rounded-xl border border-brand-steel/20 text-brand-silver text-sm font-medium hover:text-white transition-colors"
+                    >
+                      No, mantener
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirming(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors w-fit"
+                  >
+                    <XCircle className="h-4 w-4" /> Cancelar reserva
+                  </button>
+                )
+              )}
+            </div>
           </div>
         )}
 
@@ -279,6 +304,16 @@ export default function BookingDetailPage() {
         )}
 
       </div>
+
+      {/* Modal de pago */}
+      {showPaymentModal && (
+        <PaymentModal
+          bookingId={booking.id}
+          totalAmount={booking.total_amount}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   )
 }
