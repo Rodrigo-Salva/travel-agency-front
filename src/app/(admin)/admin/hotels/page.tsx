@@ -379,7 +379,7 @@ export default function AdminHotelsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5 text-brand-silver">
                         <MapPin className="h-3 w-3 text-brand-wine" />
-                        {hotel.destination.name}
+                        {hotel.destination?.name ?? '—'}
                       </div>
                     </td>
                     <td className="px-4 py-3"><StarRow n={hotel.star_rating} /></td>

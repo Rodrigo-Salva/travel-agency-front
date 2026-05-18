@@ -75,6 +75,7 @@ const schema = z.object({
   includes_transport: z.boolean(),
   includes_guide: z.boolean(),
   is_featured: z.boolean(),
+  discount_percentage: z.number().min(0).max(100).optional(),
   available_from: z.string().optional(),
   available_until: z.string().optional(),
 })
@@ -172,6 +173,7 @@ function PackageModal({
     includes_transport: pkgDetail.includes_transport,
     includes_guide: pkgDetail.includes_guide,
     is_featured: pkgDetail.is_featured,
+    discount_percentage: pkgDetail.discount_percentage ? parseFloat(String(pkgDetail.discount_percentage)) : 0,
     available_from: pkgDetail.available_from ?? '',
     available_until: pkgDetail.available_until ?? '',
   } : {
@@ -308,6 +310,14 @@ function PackageModal({
                     <Input type="number" min={0} step="0.01" {...register('price_child', { valueAsNumber: true })}
                       className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-brand-silver text-xs flex items-center gap-1.5">
+                    Descuento (%) <span className="text-brand-steel font-normal">— 0 = sin descuento</span>
+                  </Label>
+                  <Input type="number" min={0} max={100} step="0.01" {...register('discount_percentage', { valueAsNumber: true })}
+                    placeholder="0"
+                    className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">

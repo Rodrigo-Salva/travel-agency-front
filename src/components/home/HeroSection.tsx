@@ -4,163 +4,148 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Search, MapPin, Users, ArrowRight, Star, Plane } from 'lucide-react'
+import { Search, MapPin, Users, ChevronDown } from 'lucide-react'
 import { ROUTES } from '@/lib/constants/routes'
-import { cn } from '@/lib/utils'
 
-const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80',
-  'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=1920&q=80',
-  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80',
+const SLIDES = [
+  { img: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80', tag: 'Naturaleza', title: 'Descubre el mundo', sub: 'con nosotros' },
+  { img: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=1920&q=80', tag: 'Aventura',   title: 'Vive experiencias', sub: 'únicas' },
+  { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80', tag: 'Cultura',    title: 'Explora culturas',  sub: 'del mundo' },
 ]
+
+const TABS = ['Paquetes', 'Destinos', 'Hoteles'] as const
+type Tab = typeof TABS[number]
 
 export function HeroSection() {
   const router = useRouter()
-  const [destination, setDestination] = useState('')
+  const [slide, setSlide] = useState(0)
+  const [tab, setTab] = useState<Tab>('Paquetes')
+  const [query, setQuery] = useState('')
   const [travelers, setTravelers] = useState(2)
-  const [imgIdx, setImgIdx] = useState(0)
+
   useEffect(() => {
-    setImgIdx(Math.floor(Math.random() * HERO_IMAGES.length))
+    const t = setInterval(() => setSlide(s => (s + 1) % SLIDES.length), 6000)
+    return () => clearInterval(t)
   }, [])
 
   function handleSearch() {
     const params = new URLSearchParams()
-    if (destination.trim()) params.set('search', destination.trim())
-    if (travelers !== 2) params.set('adults', String(travelers))
-    router.push(`${ROUTES.packages}?${params.toString()}`)
+    if (query.trim()) params.set('search', query.trim())
+    const routes: Record<Tab, string> = { Paquetes: ROUTES.packages, Destinos: ROUTES.destinations, Hoteles: ROUTES.hotels }
+    router.push(`${routes[tab]}?${params.toString()}`)
   }
+
+  const current = SLIDES[slide]
 
   return (
     <>
-    <section className="relative min-h-[85vh] flex items-center overflow-hidden">
-      {/* Background image */}
-      <Image
-        src={HERO_IMAGES[imgIdx]}
-        alt="Destinos de viaje"
-        fill
-        priority
-        className="object-cover object-center scale-105 animate-[kenburns_20s_ease-in-out_infinite_alternate]"
-        sizes="100vw"
-      />
+      <section className="relative min-h-[88vh] flex flex-col overflow-hidden">
+        {SLIDES.map((s, i) => (
+          <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? 'opacity-100' : 'opacity-0'}`}>
+            <Image src={s.img} alt={s.title} fill priority={i === 0} className="object-cover object-center" sizes="100vw" />
+          </div>
+        ))}
 
-      {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-brand-darkest/95 via-brand-darkest/70 to-brand-darkest/30" />
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-brand-darkest" />
 
-      {/* Animated accent blobs */}
-      <div className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full bg-brand-wine/20 blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 left-1/3 w-56 h-56 rounded-full bg-brand-rose/10 blur-3xl animate-[pulse_4s_ease-in-out_infinite]" />
-
-      {/* Floating badge top-right */}
-      <div className="absolute top-24 right-8 hidden lg:flex flex-col items-center gap-1 bg-brand-dark/80 backdrop-blur-sm border border-brand-wine/20 rounded-2xl px-5 py-4 animate-[float_6s_ease-in-out_infinite]">
-        <Plane className="h-6 w-6 text-brand-wine" />
-        <p className="text-white font-bold text-lg leading-none">500+</p>
-        <p className="text-brand-steel text-xs">Destinos</p>
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-16">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-wine/40 bg-brand-wine/10 backdrop-blur-sm px-4 py-1.5 text-sm text-brand-rose mb-6">
-            <Star className="h-3.5 w-3.5 fill-current" />
-            <span>Agencia de viajes #1 en Peru</span>
+        {/* Content */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center container mx-auto px-4 py-24">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-4 py-1.5 text-sm text-white/80 font-medium mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-rose animate-pulse" />
+            {current.tag} · Agencia #1 en Perú
           </div>
 
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-5">
-            Descubre el{' '}
-            <span className="text-gradient-brand">mundo</span>
-            <br />
-            con nosotros
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-5 max-w-4xl">
+            {current.title}{' '}
+            <span className="text-gradient-brand">{current.sub}</span>
           </h1>
 
-          <p className="text-lg text-brand-silver/90 leading-relaxed mb-8 max-w-xl">
-            Experiencias de viaje exclusivas, paquetes personalizados y destinos increibles.
-            Tu aventura perfecta comienza aqui.
+          <p className="text-lg text-white/65 leading-relaxed mb-10 max-w-lg">
+            Paquetes exclusivos, hoteles premium y experiencias que recordarás para siempre.
           </p>
 
-          <div className="flex flex-wrap gap-4 mb-10">
-            <Link
-              href={ROUTES.packages}
-              className={cn('inline-flex items-center gap-2 bg-brand-wine hover:bg-brand-wine/90 text-white px-8 h-12 rounded-xl text-base font-semibold glow-wine transition-all hover:scale-105')}
-            >
-              Ver Paquetes
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href={ROUTES.destinations}
-              className="inline-flex items-center justify-center border border-white/20 text-white hover:bg-white/10 backdrop-blur-sm px-8 h-12 rounded-xl text-base font-semibold transition-all hover:scale-105"
-            >
-              Explorar Destinos
-            </Link>
-          </div>
-
-          {/* Search bar */}
-          <div className="rounded-2xl border border-white/10 bg-brand-dark/70 backdrop-blur-md p-4 shadow-2xl">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex items-center gap-3 rounded-xl bg-brand-darkest/60 px-4 py-2 border border-brand-steel/10 focus-within:border-brand-wine/40 transition-colors">
-                <MapPin className="h-5 w-5 text-brand-wine shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-brand-steel font-medium uppercase tracking-wide">Destino</p>
-                  <input
-                    type="text"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="¿A donde quieres ir?"
-                    className="w-full bg-transparent text-sm text-white placeholder:text-brand-steel/60 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl bg-brand-darkest/60 px-4 py-2 border border-brand-steel/10 sm:col-span-2">
-                <Users className="h-5 w-5 text-brand-wine shrink-0" />
-                <div className="flex-1">
-                  <p className="text-xs text-brand-steel font-medium uppercase tracking-wide">Viajeros</p>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <button
-                      onClick={() => setTravelers(Math.max(1, travelers - 1))}
-                      className="w-6 h-6 rounded-full bg-brand-steel/20 hover:bg-brand-wine/40 text-white text-sm font-bold transition-colors flex items-center justify-center"
-                    >−</button>
-                    <span className="text-sm text-white font-medium w-16 text-center">
-                      {travelers} adulto{travelers !== 1 ? 's' : ''}
-                    </span>
-                    <button
-                      onClick={() => setTravelers(Math.min(20, travelers + 1))}
-                      className="w-6 h-6 rounded-full bg-brand-steel/20 hover:bg-brand-wine/40 text-white text-sm font-bold transition-colors flex items-center justify-center"
-                    >+</button>
-                  </div>
-                </div>
-              </div>
+          {/* Search card */}
+          <div className="w-full max-w-2xl rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
+            <div className="flex border-b border-white/10">
+              {TABS.map(t => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`flex-1 py-3 text-sm font-semibold transition-all ${
+                    tab === t ? 'text-white border-b-2 border-brand-rose bg-white/5' : 'text-white/40 hover:text-white/70'
+                  }`}>
+                  {t}
+                </button>
+              ))}
             </div>
 
-            <button
-              onClick={handleSearch}
-              className="flex items-center justify-center w-full mt-3 bg-brand-wine hover:bg-brand-wine/90 text-white h-11 font-semibold rounded-xl transition-all hover:scale-[1.01] gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Buscar Paquetes
-            </button>
+            <div className="p-3 flex flex-col sm:flex-row gap-2">
+              <div className="flex items-center gap-3 flex-1 rounded-xl bg-white/8 border border-white/10 focus-within:border-white/25 transition-colors px-4 py-3">
+                <MapPin className="h-4 w-4 text-brand-rose flex-shrink-0" />
+                <input value={query} onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  placeholder="¿A dónde quieres ir?"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none" />
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl bg-white/8 border border-white/10 px-4 py-3 min-w-[130px]">
+                <Users className="h-4 w-4 text-brand-rose flex-shrink-0" />
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setTravelers(Math.max(1, travelers - 1))}
+                    className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center leading-none">−</button>
+                  <span className="text-sm text-white font-medium w-5 text-center">{travelers}</span>
+                  <button onClick={() => setTravelers(Math.min(20, travelers + 1))}
+                    className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center leading-none">+</button>
+                </div>
+              </div>
+
+              <button onClick={handleSearch}
+                className="flex items-center justify-center gap-2 bg-brand-wine hover:bg-brand-wine/85 text-white px-6 py-3 font-bold rounded-xl transition-all text-sm whitespace-nowrap">
+                <Search className="h-4 w-4" /> Buscar
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+            <span className="text-white/30 text-xs">Popular:</span>
+            {['Machu Picchu', 'Cusco', 'Caribe', 'Europa'].map(dest => (
+              <Link key={dest} href={`${ROUTES.packages}?search=${dest}`}
+                className="text-xs text-white/50 hover:text-white transition-colors bg-white/8 hover:bg-white/15 border border-white/10 rounded-full px-3 py-1">
+                {dest}
+              </Link>
+            ))}
           </div>
         </div>
-      </div>
-    </section>
 
-    {/* Stats row */}
-    <div className="border-t border-brand-steel/10 bg-brand-dark">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-3 divide-x divide-brand-steel/10">
-          {[
-            { value: '500+', label: 'Destinos' },
-            { value: '10K+', label: 'Viajeros felices' },
-            { value: '4.9★', label: 'Calificacion promedio' },
-          ].map((stat) => (
-            <div key={stat.label} className="py-5 px-6 text-center">
-              <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-brand-steel mt-0.5">{stat.label}</p>
-            </div>
+        {/* Slide dots */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {SLIDES.map((_, i) => (
+            <button key={i} onClick={() => setSlide(i)}
+              className={`h-1 rounded-full transition-all duration-300 ${i === slide ? 'w-8 bg-white' : 'w-2 bg-white/30'}`} />
           ))}
         </div>
+
+        <div className="absolute bottom-10 right-8 z-10 hidden sm:block">
+          <ChevronDown className="h-4 w-4 text-white/25 animate-bounce" />
+        </div>
+      </section>
+
+      {/* Stats bar */}
+      <div className="bg-brand-darkest border-t border-brand-steel/20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-brand-steel/15">
+            {[
+              { value: '500+', label: 'Destinos' },
+              { value: '10K+', label: 'Viajeros felices' },
+              { value: '4.9★', label: 'Calificación' },
+              { value: '15+',  label: 'Años de experiencia' },
+            ].map(stat => (
+              <div key={stat.label} className="py-6 px-6 text-center">
+                <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs text-brand-silver/60 mt-1 uppercase tracking-wider">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
     </>
   )
 }
