@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin, ArrowRight, Heart } from 'lucide-react'
+import { Clock, MapPin, ArrowRight, Heart, Users } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ROUTES } from '@/lib/constants/routes'
@@ -13,9 +13,7 @@ import { wishlistApi } from '@/lib/api/wishlist.api'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import type { PackageSummary } from '../types/package.types'
 
-interface Props {
-  pkg: PackageSummary
-}
+interface Props { pkg: PackageSummary }
 
 export function PackageCard({ pkg }: Props) {
   const { isAuthenticated } = useAuthStore()
@@ -32,7 +30,6 @@ export function PackageCard({ pkg }: Props) {
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
   })
-
   const wishlistItem = wishlist.find(w => w.package === pkg.id)
 
   const toggleWishlist = useMutation({
@@ -44,92 +41,93 @@ export function PackageCard({ pkg }: Props) {
     onError: () => toast.error('No se pudo actualizar la lista de deseos'),
   })
 
+  const hasDiscount = pkg.discount_percentage && parseFloat(String(pkg.discount_percentage)) > 0
+  const discountPct = hasDiscount ? parseFloat(String(pkg.discount_percentage)).toFixed(0) : null
+
   return (
-    <Link
-      href={ROUTES.package(pkg.id)}
-      className="group flex flex-col rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark hover:border-brand-wine/40 hover:shadow-lg hover:shadow-brand-wine/10 transition-all duration-300"
-    >
+    <Link href={ROUTES.package(pkg.id)}
+      className="group flex flex-col rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark card-depth hover:card-depth-hover hover:border-brand-wine/35 hover:-translate-y-1 transition-all duration-300">
+
       {/* Image */}
-      <div className="relative h-48 overflow-hidden bg-brand-darkest">
+      <div className="relative h-52 overflow-hidden bg-brand-darkest">
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={pkg.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
+          <Image src={imageUrl} alt={pkg.name} fill
+            className="object-cover group-hover:scale-[1.07] transition-transform duration-700 ease-out"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark to-brand-darkest flex items-center justify-center">
-            <MapPin className="h-10 w-10 text-brand-steel/40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-wine/20 via-brand-dark to-brand-darkest flex items-center justify-center">
+            <MapPin className="h-12 w-12 text-brand-steel/30" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest/90 via-brand-darkest/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-darkest/30 to-transparent" />
 
-        {/* Wishlist button */}
-        <button
-          onClick={e => {
-            e.preventDefault()
-            if (!isAuthenticated) {
-              router.push(ROUTES.auth.login)
-              return
-            }
-            toggleWishlist.mutate()
-          }}
-          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${wishlistItem ? 'bg-brand-wine text-white' : 'bg-brand-darkest/70 text-brand-steel hover:text-brand-rose'}`}
-        >
+        {/* Wishlist */}
+        <button onClick={e => {
+          e.preventDefault()
+          if (!isAuthenticated) { router.push(ROUTES.auth.login); return }
+          toggleWishlist.mutate()
+        }}
+          className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            wishlistItem ? 'bg-brand-wine text-white glow-wine-sm' : 'bg-brand-darkest/80 backdrop-blur-sm text-brand-steel hover:text-brand-rose hover:bg-brand-darkest border border-white/10'
+          }`}>
           <Heart className={`h-4 w-4 ${wishlistItem ? 'fill-white' : ''}`} />
         </button>
 
-        {/* Featured badge */}
-        {pkg.is_featured && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-brand-wine/90 text-white border-0 text-xs">Destacado</Badge>
-          </div>
-        )}
+        {/* Top badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {pkg.is_featured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-wine px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
+              Destacado
+            </span>
+          )}
+          {hasDiscount && (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
+              -{discountPct}% OFF
+            </span>
+          )}
+        </div>
 
-        {/* Category */}
-        <div className="absolute bottom-3 left-3 flex gap-1.5">
-          <Badge variant="secondary" className="bg-brand-darkest/80 text-brand-silver border-brand-steel/20 text-xs">
+        {/* Bottom pills */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-brand-darkest/80 backdrop-blur-sm border border-brand-steel/20 text-brand-silver">
             {pkg.category_name}
-          </Badge>
+          </span>
+          <span className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-brand-darkest/80 backdrop-blur-sm border border-brand-steel/20 text-brand-silver">
+            <Clock className="h-3 w-3" /> {pkg.duration_days}d/{pkg.duration_nights}n
+          </span>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-4">
-        {/* Destination */}
-        <div className="flex items-center gap-1 text-brand-wine text-xs font-medium mb-1.5">
-          <MapPin className="h-3.5 w-3.5" />
-          {pkg.destination_name}
+        <div className="flex items-center gap-1.5 text-brand-rose text-xs font-semibold mb-2 uppercase tracking-wide">
+          <MapPin className="h-3.5 w-3.5" /> {pkg.destination_name}
         </div>
-
-        {/* Title */}
-        <h3 className="font-semibold text-white text-sm leading-snug line-clamp-2 mb-2 group-hover:text-brand-rose transition-colors">
+        <h3 className="font-bold text-white text-sm leading-snug line-clamp-2 mb-2 group-hover:text-brand-rose transition-colors">
           {pkg.name}
         </h3>
+        <p className="text-xs text-brand-silver/80 line-clamp-2 mb-4 flex-1 leading-relaxed">{pkg.short_description}</p>
 
-        {/* Description */}
-        <p className="text-xs text-brand-silver line-clamp-2 mb-3 flex-1">{pkg.short_description}</p>
-
-        {/* Meta */}
-        <div className="flex items-center gap-3 text-xs text-brand-steel mb-3">
-          <span className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {pkg.duration_days}d / {pkg.duration_nights}n
-          </span>
-        </div>
-
-        {/* Price + CTA */}
-        <div className="flex items-center justify-between pt-3 border-t border-brand-steel/10">
+        <div className="flex items-end justify-between pt-3 border-t border-brand-steel/10">
           <div>
-            <p className="text-xs text-brand-steel">Desde</p>
-            <p className="font-display text-lg font-bold text-white">
-              {formatPrice(pkg.price_adult)}
+            <p className="text-[11px] text-brand-steel uppercase tracking-widest mb-0.5">Desde</p>
+            {hasDiscount ? (
+              <div className="flex items-baseline gap-2">
+                <p className="font-display text-xl font-bold text-white leading-none">
+                  {formatPrice(pkg.discounted_price_adult ?? pkg.price_adult)}
+                </p>
+                <span className="text-xs text-brand-steel line-through">{formatPrice(pkg.price_adult)}</span>
+              </div>
+            ) : (
+              <p className="font-display text-xl font-bold text-white leading-none">{formatPrice(pkg.price_adult)}</p>
+            )}
+            <p className="text-[11px] text-brand-steel mt-1 flex items-center gap-1">
+              <Users className="h-3 w-3" /> por persona
             </p>
           </div>
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-wine/20 group-hover:bg-brand-wine text-brand-rose group-hover:text-white transition-all">
-            <ArrowRight className="h-4 w-4" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-wine/15 group-hover:bg-brand-wine border border-brand-wine/20 group-hover:border-brand-wine text-brand-rose group-hover:text-white transition-all duration-300">
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
       </div>
@@ -139,14 +137,20 @@ export function PackageCard({ pkg }: Props) {
 
 export function PackageCardSkeleton() {
   return (
-    <div className="rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark animate-pulse">
-      <div className="h-48 bg-brand-steel/10" />
-      <div className="p-4 space-y-2.5">
-        <div className="h-3 w-20 bg-brand-steel/20 rounded" />
+    <div className="rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark card-depth animate-pulse">
+      <div className="h-52 bg-gradient-to-b from-brand-steel/10 to-brand-darkest/50" />
+      <div className="p-4 space-y-3">
+        <div className="h-2.5 w-20 bg-brand-wine/20 rounded-full" />
         <div className="h-4 w-3/4 bg-brand-steel/20 rounded" />
         <div className="h-3 w-full bg-brand-steel/10 rounded" />
-        <div className="h-3 w-2/3 bg-brand-steel/10 rounded" />
-        <div className="h-8 w-full bg-brand-wine/10 rounded mt-2" />
+        <div className="h-px w-full bg-brand-steel/10" />
+        <div className="flex justify-between items-end">
+          <div className="space-y-1.5">
+            <div className="h-2 w-12 bg-brand-steel/10 rounded" />
+            <div className="h-6 w-24 bg-brand-steel/20 rounded" />
+          </div>
+          <div className="h-10 w-10 bg-brand-wine/10 rounded-xl" />
+        </div>
       </div>
     </div>
   )
