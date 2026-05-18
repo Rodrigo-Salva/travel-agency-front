@@ -4,6 +4,7 @@ export const ROUTES = {
   destination: (slug: string | number) => `/destinations/${slug}`,
   packages: '/packages',
   package: (slug: string | number) => `/packages/${slug}`,
+  comparePackages: '/packages/compare',
   hotels: '/hotels',
   hotel: (id: number) => `/hotels/${id}`,
   flights: '/flights',
@@ -15,6 +16,8 @@ export const ROUTES = {
   auth: {
     login: '/login',
     register: '/register',
+    forgotPassword: '/forgot-password',
+    resetPassword: '/reset-password',
   },
 
   customer: {

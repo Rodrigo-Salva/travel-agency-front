@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Star, CheckCircle2, MessageSquare, PenLine } from 'lucide-react'
 import { useReviews } from '../hooks/useReviews'
 import { formatDate } from '@/lib/utils/format'
@@ -8,6 +9,13 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { ROUTES } from '@/lib/constants/routes'
 import { ReviewForm } from './ReviewForm'
 import Link from 'next/link'
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+
+function getPhotoUrl(photo: string | null): string | null {
+  if (!photo) return null
+  return photo.startsWith('http') ? photo : `${BASE_URL}${photo}`
+}
 
 interface Props {
   packageId: number
@@ -158,6 +166,19 @@ export function ReviewList({ packageId }: Props) {
               <StarRow rating={review.transport_rating} label="Transporte" />
               <StarRow rating={review.guide_rating} label="Guia" />
               <StarRow rating={review.value_rating} label="Calidad-precio" />
+            </div>
+          )}
+          {review.photo && (
+            <div className="pt-3 border-t border-brand-steel/10">
+              <div className="relative h-40 w-full rounded-xl overflow-hidden">
+                <Image
+                  src={getPhotoUrl(review.photo)!}
+                  alt="Foto de la reseña"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 600px"
+                />
+              </div>
             </div>
           )}
           {(review.pros || review.cons) && (

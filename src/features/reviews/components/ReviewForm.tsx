@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { Star, Loader2, X, Send, ChevronDown, ChevronUp } from 'lucide-react'
+import { Star, Loader2, X, Send, ChevronDown, ChevronUp, ImagePlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { reviewsApi } from '../api/reviews.api'
 
@@ -51,21 +51,26 @@ export function ReviewForm({ packageId, onClose, label }: Props) {
   const [cons, setCons] = useState('')
   const [showMore, setShowMore] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const submit = useMutation({
-    mutationFn: () =>
-      reviewsApi.create({
-        ...(packageId ? { package: packageId } : {}),
-        overall_rating: overall,
-        ...(accommodation ? { accommodation_rating: accommodation } : {}),
-        ...(transport     ? { transport_rating:     transport     } : {}),
-        ...(guide         ? { guide_rating:          guide         } : {}),
-        ...(value         ? { value_rating:           value         } : {}),
-        ...(title.trim()   ? { title:   title.trim()   } : {}),
-        ...(comment.trim() ? { comment: comment.trim() } : {}),
-        ...(pros.trim()    ? { pros:    pros.trim()    } : {}),
-        ...(cons.trim()    ? { cons:    cons.trim()    } : {}),
-      } as any),
+    mutationFn: () => {
+      const fd = new FormData()
+      if (packageId) fd.append('package', String(packageId))
+      fd.append('overall_rating', String(overall))
+      if (accommodation) fd.append('accommodation_rating', String(accommodation))
+      if (transport)     fd.append('transport_rating', String(transport))
+      if (guide)         fd.append('guide_rating', String(guide))
+      if (value)         fd.append('value_rating', String(value))
+      if (title.trim())   fd.append('title', title.trim())
+      if (comment.trim()) fd.append('comment', comment.trim())
+      if (pros.trim())    fd.append('pros', pros.trim())
+      if (cons.trim())    fd.append('cons', cons.trim())
+      if (photo)          fd.append('photo', photo)
+      return reviewsApi.createWithForm(fd)
+    },
     onSuccess: () => {
       setSubmitted(true)
       if (packageId) qc.invalidateQueries({ queryKey: queryKeys.reviews.byPackage(packageId) })
@@ -170,6 +175,48 @@ export function ReviewForm({ packageId, onClose, label }: Props) {
             placeholder="Comentario (opcional)"
             className="w-full bg-brand-darkest/60 border border-brand-steel/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-brand-steel/50 focus:outline-none focus:border-brand-wine resize-none"
           />
+
+          {/* Photo upload */}
+          <div className="space-y-2">
+            <p className="text-xs text-brand-steel uppercase tracking-wider">Foto (opcional)</p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null
+                setPhoto(file)
+                if (file) {
+                  const reader = new FileReader()
+                  reader.onload = (ev) => setPhotoPreview(ev.target?.result as string)
+                  reader.readAsDataURL(file)
+                } else {
+                  setPhotoPreview(null)
+                }
+              }}
+            />
+            {photoPreview ? (
+              <div className="relative inline-block">
+                <img src={photoPreview} alt="preview" className="h-24 w-auto rounded-xl object-cover border border-brand-steel/20" />
+                <button
+                  type="button"
+                  onClick={() => { setPhoto(null); setPhotoPreview(null); if (fileRef.current) fileRef.current.value = '' }}
+                  className="absolute -top-2 -right-2 p-1 rounded-full bg-brand-darkest border border-brand-steel/20 text-brand-steel hover:text-white transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-brand-steel/20 hover:border-brand-wine/40 text-brand-steel hover:text-brand-silver text-sm transition-colors"
+              >
+                <ImagePlus className="h-4 w-4" /> Subir foto
+              </button>
+            )}
+          </div>
 
           {/* Pros / Cons */}
           <div className="grid grid-cols-2 gap-3">

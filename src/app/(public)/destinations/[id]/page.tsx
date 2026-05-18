@@ -1,6 +1,7 @@
 'use client'
 
 import { use } from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Star, Globe, Calendar, Package } from 'lucide-react'
@@ -9,6 +10,11 @@ import { usePackages } from '@/features/packages/hooks/usePackages'
 import { PackageCard, PackageCardSkeleton } from '@/features/packages/components/PackageCard'
 import { ROUTES } from '@/lib/constants/routes'
 import { Badge } from '@/components/ui/badge'
+
+const DestinationMap = dynamic(
+  () => import('@/features/destinations/components/DestinationMap').then((m) => m.DestinationMap),
+  { ssr: false, loading: () => <div className="h-[300px] rounded-2xl bg-brand-dark animate-pulse" /> },
+)
 
 interface Props {
   params: Promise<{ id: string }>
@@ -119,6 +125,19 @@ export default function DestinationDetailPage({ params }: Props) {
                 {destination.description || destination.short_description}
               </p>
             </div>
+
+            {/* Map */}
+            {(destination.latitude || destination.longitude) && (
+              <div>
+                <h2 className="font-display text-2xl font-bold text-white mb-4">Ubicación</h2>
+                <DestinationMap
+                  name={destination.name}
+                  country={destination.country}
+                  latitude={destination.latitude}
+                  longitude={destination.longitude}
+                />
+              </div>
+            )}
 
             {/* Packages for this destination */}
             <div>

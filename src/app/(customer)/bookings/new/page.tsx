@@ -79,7 +79,7 @@ function NewBookingContent() {
 export default function NewBookingPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-16 pb-8">
+      <div className="bg-brand-dark pt-16 pb-8">
         <div className="container mx-auto px-4">
           <Link
             href={ROUTES.packages}
