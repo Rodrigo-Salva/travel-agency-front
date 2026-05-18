@@ -35,14 +35,16 @@ export default function ActivitiesPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
-            <Zap className="h-4 w-4" />
+      <div className="relative overflow-hidden bg-brand-dark border-b border-brand-steel/15 pt-16 pb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-600/30 to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex items-center gap-2 text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
+            <Zap className="h-3.5 w-3.5" />
             Experiencias únicas
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-4">Actividades</h1>
-          <p className="text-brand-silver max-w-2xl text-lg">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Actividades</h1>
+          <p className="text-brand-silver/80 max-w-xl">
             Desde aventuras extremas hasta experiencias culturales. Encuentra la actividad perfecta para tu viaje.
           </p>
         </div>

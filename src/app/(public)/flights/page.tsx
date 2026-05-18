@@ -116,9 +116,9 @@ export default function FlightsPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Hero */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest border-b border-brand-steel/10 pt-24 pb-16">
+      <div className="bg-brand-dark border-b border-brand-steel/10 pt-24 pb-16">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">Vuelos disponibles</p>
+          <p className="text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">Vuelos disponibles</p>
           <h1 className="font-display text-5xl font-bold text-white mb-4">Encuentra tu vuelo</h1>
           <p className="text-brand-silver text-lg max-w-xl mx-auto mb-8">
             Explora nuestras rutas disponibles y encuentra el vuelo perfecto para tu próxima aventura.

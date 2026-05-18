@@ -25,6 +25,8 @@ export interface PackageSummary {
   duration_nights: number
   price_adult: string   // Django Decimal comes as string
   price_child: string
+  discount_percentage?: string | null
+  discounted_price_adult?: string | null
   image: string | null
   is_featured: boolean
   created_at: string
@@ -50,6 +52,8 @@ export interface PackageDetail {
   includes_meals: boolean
   includes_transport: boolean
   includes_guide: boolean
+  discount_percentage?: string | null
+  discounted_price_adult?: string | null
   image: string | null
   is_active: boolean
   is_featured: boolean

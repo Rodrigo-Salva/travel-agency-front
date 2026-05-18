@@ -76,9 +76,14 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password" className="text-brand-silver text-sm">
-          Contrasena
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password" className="text-brand-silver text-sm">
+            Contrasena
+          </Label>
+          <Link href={ROUTES.auth.forgotPassword} className="text-xs text-brand-rose hover:text-white transition-colors">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <div className="relative">
           <Input
             id="password"

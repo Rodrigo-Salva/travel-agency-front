@@ -29,4 +29,22 @@ export const authApi = {
     const { data } = await apiClient.patch(API.auth.updateProfile, payload)
     return data.usuario as User
   },
+
+  changePassword: async (payload: { current_password: string; new_password: string; confirm_password: string }) => {
+    const { data } = await apiClient.post(API.auth.changePassword, payload)
+    return data
+  },
+
+  forgotPassword: async (email: string) => {
+    const { data } = await apiClient.post(API.auth.forgotPassword, {
+      email,
+      frontend_url: window.location.origin,
+    })
+    return data
+  },
+
+  resetPassword: async (payload: { token: string; new_password: string; confirm_password: string }) => {
+    const { data } = await apiClient.post(API.auth.resetPassword, payload)
+    return data
+  },
 }

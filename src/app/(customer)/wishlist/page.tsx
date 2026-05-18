@@ -28,9 +28,9 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-brand-darkest">
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest border-b border-brand-steel/10 pt-14 pb-10">
+      <div className="bg-brand-dark border-b border-brand-steel/10 pt-14 pb-10">
         <div className="container mx-auto px-4">
-          <p className="text-brand-wine text-sm font-semibold uppercase tracking-widest mb-2">Mi cuenta</p>
+          <p className="text-brand-rose text-xs font-bold uppercase tracking-widest mb-2">Mi cuenta</p>
           <h1 className="font-display text-4xl font-bold text-white">Lista de deseos</h1>
           {items.length > 0 && (
             <p className="text-brand-silver mt-1">{items.length} paquete{items.length !== 1 ? 's' : ''} guardado{items.length !== 1 ? 's' : ''}</p>
