@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User, Save, Loader2, Mail, Phone, MapPin, Globe, CreditCard } from 'lucide-react'
+import { User, Save, Loader2, Mail, Phone, MapPin, Globe, CreditCard, Lock, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi } from '@/features/auth/api/auth.api'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -22,6 +22,101 @@ const schema = z.object({
   passport_number: z.string().optional(),
 })
 type FormData = z.infer<typeof schema>
+
+const pwdSchema = z.object({
+  current_password: z.string().min(1, 'Requerido'),
+  new_password:     z.string().min(8, 'Mínimo 8 caracteres'),
+  confirm_password: z.string(),
+}).refine(d => d.new_password === d.confirm_password, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirm_password'],
+})
+type PwdData = z.infer<typeof pwdSchema>
+
+function ChangePasswordSection() {
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew]         = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<PwdData>({
+    resolver: zodResolver(pwdSchema),
+  })
+
+  const mutation = useMutation({
+    mutationFn: (values: PwdData) => authApi.changePassword(values),
+    onSuccess: () => {
+      toast.success('Contraseña actualizada correctamente')
+      reset()
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { mensaje?: string } } })?.response?.data?.mensaje
+      toast.error(msg ?? 'No se pudo cambiar la contraseña')
+    },
+  })
+
+  return (
+    <form onSubmit={handleSubmit(v => mutation.mutate(v))}
+      className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6 space-y-5">
+      <div className="flex items-center gap-2 mb-2">
+        <Lock className="h-4 w-4 text-brand-wine" />
+        <h2 className="font-semibold text-white">Cambiar contraseña</h2>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-brand-silver text-sm">Contraseña actual</Label>
+        <div className="relative">
+          <Input type={showCurrent ? 'text' : 'password'} placeholder="••••••••"
+            autoComplete="current-password"
+            {...register('current_password')}
+            className="pr-10 bg-brand-darkest/60 border-brand-steel/20 text-white placeholder:text-brand-steel" />
+          <button type="button" onClick={() => setShowCurrent(v => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-steel hover:text-brand-silver transition-colors">
+            {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.current_password && <p className="text-xs text-red-400">{errors.current_password.message}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-brand-silver text-sm">Nueva contraseña</Label>
+          <div className="relative">
+            <Input type={showNew ? 'text' : 'password'} placeholder="••••••••"
+              autoComplete="new-password"
+              {...register('new_password')}
+              className="pr-10 bg-brand-darkest/60 border-brand-steel/20 text-white placeholder:text-brand-steel" />
+            <button type="button" onClick={() => setShowNew(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-steel hover:text-brand-silver transition-colors">
+              {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.new_password && <p className="text-xs text-red-400">{errors.new_password.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-brand-silver text-sm">Confirmar nueva contraseña</Label>
+          <div className="relative">
+            <Input type={showConfirm ? 'text' : 'password'} placeholder="••••••••"
+              autoComplete="new-password"
+              {...register('confirm_password')}
+              className="pr-10 bg-brand-darkest/60 border-brand-steel/20 text-white placeholder:text-brand-steel" />
+            <button type="button" onClick={() => setShowConfirm(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-steel hover:text-brand-silver transition-colors">
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirm_password && <p className="text-xs text-red-400">{errors.confirm_password.message}</p>}
+        </div>
+      </div>
+
+      <button type="submit" disabled={mutation.isPending}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors disabled:opacity-50">
+        {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+        {mutation.isPending ? 'Guardando...' : 'Cambiar contraseña'}
+      </button>
+    </form>
+  )
+}
+
 
 export default function ProfilePage() {
   const { setFullUser } = useAuthStore()
@@ -76,9 +171,9 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-brand-darkest">
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest border-b border-brand-steel/10 pt-14 pb-10">
+      <div className="bg-brand-dark border-b border-brand-steel/10 pt-14 pb-10">
         <div className="container mx-auto px-4">
-          <p className="text-brand-wine text-sm font-semibold uppercase tracking-widest mb-2">Mi cuenta</p>
+          <p className="text-brand-rose text-xs font-bold uppercase tracking-widest mb-2">Mi cuenta</p>
           <h1 className="font-display text-4xl font-bold text-white">Mi perfil</h1>
         </div>
       </div>
@@ -89,6 +184,7 @@ export default function ProfilePage() {
             {[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl bg-brand-dark animate-pulse" />)}
           </div>
         ) : (
+          <div className="space-y-8">
           <form onSubmit={handleSubmit(v => update.mutate(v))} className="space-y-8">
             {/* Avatar */}
             <div className="flex items-center gap-5">
@@ -186,6 +282,10 @@ export default function ProfilePage() {
               {update.isPending ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </form>
+
+          {/* Cambiar contraseña — formulario independiente */}
+          <ChangePasswordSection />
+          </div>
         )}
       </div>
     </div>

@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Star, Search, Loader2, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, Search, Loader2, CheckCircle2, XCircle, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react'
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+function resolvePhoto(photo: string | null | undefined) {
+  if (!photo) return null
+  return photo.startsWith('http') ? photo : `${BASE_URL}${photo}`
+}
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api/client'
@@ -20,6 +26,7 @@ interface Review {
   is_approved: boolean
   created_at: string
   customer_name?: string
+  photo?: string | null
 }
 
 function StarBadge({ n }: { n: number }) {
@@ -152,7 +159,7 @@ export default function AdminReviewsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-brand-steel/10">
-                  {['Cliente', 'Título', 'Rating', 'Estado', 'Fecha', 'Acciones'].map((h) => (
+                  {['Cliente', 'Título', 'Rating', 'Foto', 'Estado', 'Fecha', 'Acciones'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-brand-steel uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -166,6 +173,16 @@ export default function AdminReviewsPage() {
                       <p className="text-xs text-brand-steel line-clamp-1">{r.comment}</p>
                     </td>
                     <td className="px-4 py-3"><StarBadge n={r.overall_rating} /></td>
+                    <td className="px-4 py-3">
+                      {resolvePhoto(r.photo) ? (
+                        <a href={resolvePhoto(r.photo)!} target="_blank" rel="noopener noreferrer">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={resolvePhoto(r.photo)!} alt="foto" className="h-10 w-14 object-cover rounded-lg border border-brand-steel/20 hover:opacity-80 transition-opacity" />
+                        </a>
+                      ) : (
+                        <span className="text-brand-steel/30"><ImageIcon className="h-4 w-4" /></span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`flex items-center gap-1 text-xs font-medium ${r.is_approved ? 'text-emerald-400' : 'text-amber-400'}`}>
                         {r.is_approved ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}

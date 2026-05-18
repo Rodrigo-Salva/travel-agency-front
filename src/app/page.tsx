@@ -30,7 +30,7 @@ export default function HomePage() {
         {/* CTA final */}
         <section className="py-20 bg-brand-darkest border-t border-brand-steel/10">
           <div className="container mx-auto px-4 text-center">
-            <p className="text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
+            <p className="text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
               Empieza hoy
             </p>
             <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-4">

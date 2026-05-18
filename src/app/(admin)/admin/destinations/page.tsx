@@ -63,10 +63,12 @@ const schema = z.object({
   short_description: z.string().min(10, 'Mínimo 10 caracteres'),
   description: z.string().optional(),
   best_season: z.string().optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
   is_popular: z.boolean(),
 })
 
-type FormData = z.infer<typeof schema>
+type DestFormData = z.infer<typeof schema>
 
 function ImageUpload({
   current,
@@ -127,7 +129,7 @@ function DestinationModal({ dest, onClose }: { dest: Destination | null; onClose
   const isEdit = !!dest
   const [imageFile, setImageFile] = useState<File | null>(null)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<DestFormData>({
     resolver: zodResolver(schema),
     defaultValues: isEdit
       ? {
@@ -137,13 +139,15 @@ function DestinationModal({ dest, onClose }: { dest: Destination | null; onClose
           short_description: dest.short_description,
           description: dest.description ?? '',
           best_season: dest.best_season ?? '',
+          latitude: dest.latitude != null ? String(dest.latitude) : '',
+          longitude: dest.longitude != null ? String(dest.longitude) : '',
           is_popular: dest.is_popular,
         }
       : { continent: 'America', is_popular: false },
   })
 
   const mutation = useMutation({
-    mutationFn: (formData: FormData) =>
+    mutationFn: (formData: globalThis.FormData) =>
       isEdit ? destinationsApi.update(dest.id, formData) : destinationsApi.create(formData),
     onSuccess: () => {
       toast.success(isEdit ? 'Destino actualizado' : 'Destino creado')
@@ -153,7 +157,7 @@ function DestinationModal({ dest, onClose }: { dest: Destination | null; onClose
     onError: () => toast.error(isEdit ? 'Error al actualizar' : 'Error al crear'),
   })
 
-  const onSubmit = (values: FormData) => {
+  const onSubmit = (values: DestFormData) => {
     const fd = new FormData()
     Object.entries(values).forEach(([k, v]) => {
       if (v !== undefined && v !== '') fd.append(k, String(v))
@@ -206,6 +210,14 @@ function DestinationModal({ dest, onClose }: { dest: Destination | null; onClose
               <div className="space-y-1.5">
                 <Label className="text-brand-silver text-xs">Mejor época</Label>
                 <Input {...register('best_season')} placeholder="Ej: Diciembre - Marzo" className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-brand-silver text-xs">Latitud</Label>
+                <Input {...register('latitude')} placeholder="-12.046374" className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-brand-silver text-xs">Longitud</Label>
+                <Input {...register('longitude')} placeholder="-77.042793" className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
               </div>
             </div>
 

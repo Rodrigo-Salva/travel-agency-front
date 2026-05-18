@@ -36,4 +36,11 @@ export const reviewsApi = {
     const { data } = await apiClient.post(API.reviews, payload)
     return data.resena ?? data
   },
+
+  async createWithForm(formData: FormData): Promise<Review> {
+    const { data } = await apiClient.post(API.reviews, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return data.resena ?? data
+  },
 }

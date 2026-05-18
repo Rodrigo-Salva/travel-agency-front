@@ -6,7 +6,9 @@ import { usePackages } from '@/features/packages/hooks/usePackages'
 import { PackageCard, PackageCardSkeleton } from '@/features/packages/components/PackageCard'
 import { PackageFiltersBar } from '@/features/packages/components/PackageFilters'
 import type { PackageFilters } from '@/features/packages/types/package.types'
-import { ChevronLeft, ChevronRight, Package } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Package, GitCompare } from 'lucide-react'
+import Link from 'next/link'
+import { ROUTES } from '@/lib/constants/routes'
 
 function PackagesContent() {
   const searchParams = useSearchParams()
@@ -25,17 +27,29 @@ function PackagesContent() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
-            <Package className="h-4 w-4" />
+      <div className="relative overflow-hidden bg-brand-dark border-b border-brand-steel/15 pt-16 pb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-wine/8 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-wine/30 to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex items-center gap-2 text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
+            <Package className="h-3.5 w-3.5" />
             Todo incluido
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-4">Paquetes de viaje</h1>
-          <p className="text-brand-silver max-w-2xl text-lg">
-            Paquetes diseñados para que solo te preocupes de disfrutar. Vuelos, hotel,
-            traslados y actividades en un solo lugar.
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Paquetes de viaje</h1>
+              <p className="text-brand-silver/80 max-w-xl">
+                Paquetes diseñados para que solo te preocupes de disfrutar. Vuelos, hotel, traslados y actividades en un solo lugar.
+              </p>
+            </div>
+            <Link
+              href={ROUTES.comparePackages}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine/10 border border-brand-wine/30 text-brand-rose text-sm font-semibold hover:bg-brand-wine/20 transition-colors flex-shrink-0 mt-2"
+            >
+              <GitCompare className="h-4 w-4" />
+              Comparar paquetes
+            </Link>
+          </div>
         </div>
       </div>
 

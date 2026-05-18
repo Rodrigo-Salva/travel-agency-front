@@ -21,6 +21,8 @@ import {
   Car,
   UserCheck,
   MessageSquare,
+  Share2,
+  Check,
 } from 'lucide-react'
 import { usePackage } from '@/features/packages/hooks/usePackages'
 import { ReviewList } from '@/features/reviews/components/ReviewList'
@@ -100,6 +102,19 @@ function ItineraryDayCard({ day }: { day: { day_number: number; title: string; d
 export default function PackageDetailPage({ params }: Props) {
   const { id } = use(params)
   const { data: pkg, isLoading, isError } = usePackage(id)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = () => {
+    const url = window.location.href
+    if (navigator.share) {
+      navigator.share({ title: pkg?.name ?? 'Paquete de viaje', url })
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+    }
+  }
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
   const imageUrl = pkg?.image
@@ -156,8 +171,8 @@ export default function PackageDetailPage({ params }: Props) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/50 to-transparent" />
 
-        {/* Back */}
-        <div className="absolute top-6 left-0 right-0 container mx-auto px-4">
+        {/* Back + Share */}
+        <div className="absolute top-6 left-0 right-0 container mx-auto px-4 flex items-center justify-between">
           <Link
             href={ROUTES.packages}
             className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg"
@@ -165,6 +180,13 @@ export default function PackageDetailPage({ params }: Props) {
             <ArrowLeft className="h-4 w-4" />
             Todos los paquetes
           </Link>
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg"
+          >
+            {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}
+            {copied ? 'Copiado!' : 'Compartir'}
+          </button>
         </div>
 
         {/* Content */}
@@ -268,9 +290,21 @@ export default function PackageDetailPage({ params }: Props) {
             {/* Price card */}
             <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6 sticky top-6">
               <p className="text-brand-steel text-xs uppercase tracking-wider mb-1">Precio por persona</p>
-              <p className="font-display text-4xl font-bold text-white mb-1">
-                {formatPrice(pkg.price_adult)}
-              </p>
+              {pkg.discount_percentage && parseFloat(String(pkg.discount_percentage)) > 0 ? (
+                <div className="mb-1">
+                  <span className="text-brand-steel text-sm line-through mr-2">{formatPrice(pkg.price_adult)}</span>
+                  <span className="bg-brand-wine/20 text-brand-rose text-xs font-bold px-2 py-0.5 rounded-full">
+                    -{parseFloat(String(pkg.discount_percentage)).toFixed(0)}%
+                  </span>
+                  <p className="font-display text-4xl font-bold text-white mt-1">
+                    {formatPrice(pkg.discounted_price_adult ?? pkg.price_adult)}
+                  </p>
+                </div>
+              ) : (
+                <p className="font-display text-4xl font-bold text-white mb-1">
+                  {formatPrice(pkg.price_adult)}
+                </p>
+              )}
               {pkg.price_child && parseFloat(pkg.price_child) > 0 && (
                 <p className="text-sm text-brand-silver mb-5">
                   Niños: {formatPrice(pkg.price_child)}

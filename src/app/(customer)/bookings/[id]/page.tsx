@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   ChevronLeft, CalendarDays, Users, Clock, CheckCircle2, XCircle,
-  AlertCircle, Loader2, MapPin, DollarSign, FileText, User, Printer, CreditCard
+  AlertCircle, Loader2, DollarSign, FileText, User, Printer, CreditCard, Download,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { bookingsApi } from '@/features/bookings/api/bookings.api'
@@ -85,9 +85,135 @@ export default function BookingDetailPage() {
   const canCancel = booking.status === 'pending' || booking.status === 'confirmed'
   const canPay = booking.payment_status !== 'paid' && booking.status !== 'cancelled' && booking.status !== 'completed'
 
+  const printBadgeClass = `print-badge-${booking.status}`
+
   return (
     <div className="min-h-screen bg-brand-darkest">
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest border-b border-brand-steel/10 pt-14 pb-10">
+
+      {/* ── Voucher de impresión (oculto en pantalla) ─────────────────────── */}
+      <div className="hidden print-voucher" style={{ fontFamily: 'Arial, sans-serif', padding: '32px', maxWidth: '720px', margin: '0 auto' }}>
+        {/* Cabecera */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #622347', paddingBottom: '20px', marginBottom: '24px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              <div style={{ background: '#622347', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: '#fff', fontSize: '18px' }}>✈</span>
+              </div>
+              <span style={{ fontSize: '22px', fontWeight: '800', color: '#111' }}>Travel<span style={{ color: '#622347' }}>Agency</span></span>
+            </div>
+            <p style={{ color: '#666', fontSize: '12px', margin: 0 }}>Agencia de viajes — voucher de reserva</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '11px', color: '#888', margin: '0 0 2px' }}>N° de reserva</p>
+            <p style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'monospace', color: '#111', margin: 0 }}>#{booking.booking_number}</p>
+            <span className={`${printBadgeClass}`} style={{ display: 'inline-block', marginTop: '6px', fontSize: '11px', fontWeight: '700', padding: '2px 10px', borderRadius: '20px', border: '1px solid' }}>
+              {st.label}
+            </span>
+          </div>
+        </div>
+
+        {/* Detalles del viaje */}
+        <div style={{ marginBottom: '20px' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#622347', margin: '0 0 10px' }}>Detalles del viaje</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            {booking.travel_date && (
+              <div style={{ padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                <p style={{ fontSize: '10px', color: '#888', margin: '0 0 2px', textTransform: 'uppercase' }}>Salida</p>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: '#111', margin: 0 }}>{formatDate(booking.travel_date)}</p>
+              </div>
+            )}
+            {booking.return_date && (
+              <div style={{ padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                <p style={{ fontSize: '10px', color: '#888', margin: '0 0 2px', textTransform: 'uppercase' }}>Regreso</p>
+                <p style={{ fontSize: '13px', fontWeight: '600', color: '#111', margin: 0 }}>{formatDate(booking.return_date)}</p>
+              </div>
+            )}
+            <div style={{ padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+              <p style={{ fontSize: '10px', color: '#888', margin: '0 0 2px', textTransform: 'uppercase' }}>Pasajeros</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#111', margin: 0 }}>
+                {booking.num_adults} adulto{booking.num_adults !== 1 ? 's' : ''}
+                {booking.num_children > 0 ? `, ${booking.num_children} niño${booking.num_children !== 1 ? 's' : ''}` : ''}
+              </p>
+            </div>
+          </div>
+          {booking.special_requests && (
+            <div style={{ marginTop: '10px', padding: '10px 12px', border: '1px solid #fbbf24', borderRadius: '8px', background: '#fffbeb' }}>
+              <p style={{ fontSize: '10px', color: '#92400e', margin: '0 0 2px', textTransform: 'uppercase' }}>Solicitudes especiales</p>
+              <p style={{ fontSize: '12px', color: '#78350f', margin: 0 }}>{booking.special_requests}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pasajeros */}
+        {booking.passengers && booking.passengers.length > 0 && (
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#622347', margin: '0 0 10px' }}>Pasajeros</p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
+                  <th style={{ textAlign: 'left', padding: '6px 10px', borderBottom: '1px solid #e2e8f0', color: '#555', fontWeight: '600' }}>Nombre</th>
+                  <th style={{ textAlign: 'left', padding: '6px 10px', borderBottom: '1px solid #e2e8f0', color: '#555', fontWeight: '600' }}>Tipo</th>
+                  <th style={{ textAlign: 'left', padding: '6px 10px', borderBottom: '1px solid #e2e8f0', color: '#555', fontWeight: '600' }}>Pasaporte</th>
+                </tr>
+              </thead>
+              <tbody>
+                {booking.passengers.map((p, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '7px 10px', color: '#111', fontWeight: '500' }}>{p.first_name} {p.last_name}</td>
+                    <td style={{ padding: '7px 10px', color: '#555' }}>{PASSENGER_TYPE[p.passenger_type] ?? p.passenger_type}</td>
+                    <td style={{ padding: '7px 10px', color: '#777', fontFamily: 'monospace' }}>{p.passport_number ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Resumen de pago */}
+        <div style={{ marginBottom: '24px' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#622347', margin: '0 0 10px' }}>Resumen de pago</p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '6px 10px', color: '#555' }}>Subtotal</td>
+                <td style={{ padding: '6px 10px', textAlign: 'right', color: '#111' }}>{formatPrice(booking.subtotal)}</td>
+              </tr>
+              {parseFloat(booking.discount_amount) > 0 && (
+                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '6px 10px', color: '#059669' }}>Descuento</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', color: '#059669' }}>− {formatPrice(booking.discount_amount)}</td>
+                </tr>
+              )}
+              {parseFloat(booking.tax_amount) > 0 && (
+                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '6px 10px', color: '#555' }}>Impuestos</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', color: '#111' }}>{formatPrice(booking.tax_amount)}</td>
+                </tr>
+              )}
+              <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                <td style={{ padding: '8px 10px', fontWeight: '700', color: '#111', fontSize: '14px' }}>Total</td>
+                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '800', color: '#111', fontSize: '16px' }}>{formatPrice(booking.total_amount)}</td>
+              </tr>
+              {parseFloat(booking.paid_amount) > 0 && (
+                <tr>
+                  <td style={{ padding: '6px 10px', color: '#059669' }}>Pagado</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', color: '#059669', fontWeight: '600' }}>{formatPrice(booking.paid_amount)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer del voucher */}
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ fontSize: '11px', color: '#999', margin: 0 }}>Generado el {formatDate(new Date().toISOString())} · TravelAgency</p>
+          <p style={{ fontSize: '11px', color: '#999', margin: 0 }}>Presenta este documento en destino</p>
+        </div>
+      </div>
+
+      {/* ── Vista normal (oculta al imprimir) ─────────────────────────────── */}
+      <div className="print-hide">
+      <div className="bg-brand-dark border-b border-brand-steel/10 pt-14 pb-10">
         <div className="container mx-auto px-4">
           <Link href={ROUTES.customer.bookings} className="inline-flex items-center gap-1 text-brand-silver hover:text-white text-sm mb-4 transition-colors">
             <ChevronLeft className="h-4 w-4" /> Mis reservas
@@ -104,19 +230,6 @@ export default function BookingDetailPage() {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @media print {
-          nav, header, footer, .print-hide { display: none !important; }
-          body { background: white !important; color: #111 !important; }
-          .bg-brand-darkest, .bg-brand-dark { background: white !important; }
-          .text-white { color: #111 !important; }
-          .text-brand-silver { color: #444 !important; }
-          .text-brand-steel { color: #666 !important; }
-          .border-brand-steel\\/10 { border-color: #ddd !important; }
-          .rounded-2xl, .rounded-xl { border: 1px solid #ddd; }
-        }
-      `}</style>
 
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
 
@@ -222,18 +335,19 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        {/* Factura */}
-        <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6 print-hide">
-          <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <Printer className="h-4 w-4 text-brand-wine" /> Factura
+        {/* Voucher / Imprimir */}
+        <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
+          <h2 className="font-semibold text-white mb-1 flex items-center gap-2">
+            <Download className="h-4 w-4 text-brand-wine" /> Voucher de viaje
           </h2>
+          <p className="text-xs text-brand-steel mb-4">Descarga o imprime tu comprobante de reserva.</p>
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-sm font-medium hover:bg-brand-wine hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors"
           >
-            <Printer className="h-4 w-4" /> Imprimir / Guardar PDF
+            <Printer className="h-4 w-4" /> Descargar / Imprimir voucher
           </button>
-          <p className="text-xs text-brand-steel mt-2">En el diálogo de impresión elige "Guardar como PDF" para descargar.</p>
+          <p className="text-xs text-brand-steel/60 mt-2">En el diálogo elige &quot;Guardar como PDF&quot; para guardar el archivo.</p>
         </div>
 
         {/* Acciones: pagar + cancelar */}
@@ -303,7 +417,8 @@ export default function BookingDetailPage() {
           </div>
         )}
 
-      </div>
+      </div>{/* end container */}
+      </div>{/* end print-hide */}
 
       {/* Modal de pago */}
       {showPaymentModal && (

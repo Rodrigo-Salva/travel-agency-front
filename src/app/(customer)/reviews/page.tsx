@@ -26,11 +26,11 @@ export default function MyReviewsPage() {
 
   return (
     <div className="min-h-screen bg-brand-darkest">
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-16 pb-8 border-b border-brand-steel/10">
+      <div className="bg-brand-dark pt-16 pb-8 border-b border-brand-steel/10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-brand-wine text-sm font-semibold uppercase tracking-widest mb-2">Mi cuenta</p>
+              <p className="text-brand-rose text-xs font-bold uppercase tracking-widest mb-2">Mi cuenta</p>
               <h1 className="font-display text-4xl font-bold text-white">Mis reseñas</h1>
             </div>
             <Link

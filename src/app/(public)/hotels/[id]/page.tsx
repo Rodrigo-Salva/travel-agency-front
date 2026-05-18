@@ -68,7 +68,7 @@ export default function HotelDetailPage({ params }: Props) {
         {imageUrl ? (
           <Image src={imageUrl} alt={hotel.name} fill className="object-cover" priority sizes="100vw" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-dark to-brand-darkest" />
+          <div className="absolute inset-0 bg-brand-dark" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/30 to-transparent" />
 
