@@ -25,4 +25,24 @@ export const activitiesApi = {
     const { data } = await apiClient.get(API.activity(Number(id)))
     return data.actividad ?? data
   },
+
+  async create(payload: FormData | Record<string, unknown>): Promise<Activity> {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.post(API.activities, payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
+    return data.actividad ?? data
+  },
+
+  async update(id: number, payload: FormData | Record<string, unknown>): Promise<Activity> {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.patch(API.activity(id), payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
+    return data.actividad ?? data
+  },
+
+  async delete(id: number): Promise<void> {
+    await apiClient.delete(API.activity(id))
+  },
 }

@@ -32,7 +32,12 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = (data: LoginFormData) => login(data)
+  const onSubmit = (data: LoginFormData) => {
+    // Limpiar cookies viejas para evitar redirect loop del middleware
+    document.cookie = 'ta_auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    document.cookie = 'ta_user_type=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+    login(data)
+  }
 
   const errorMessage =
     isError
@@ -71,9 +76,14 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password" className="text-brand-silver text-sm">
-          Contrasena
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password" className="text-brand-silver text-sm">
+            Contrasena
+          </Label>
+          <Link href={ROUTES.auth.forgotPassword} className="text-xs text-brand-rose hover:text-white transition-colors">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <div className="relative">
           <Input
             id="password"

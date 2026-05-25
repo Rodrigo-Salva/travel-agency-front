@@ -27,6 +27,12 @@ export interface BookingSummary {
   booking_date: string
 }
 
+// Extended summary with package info — returned by my_bookings list endpoint
+export interface Booking extends BookingSummary {
+  package_name?: string | null
+  package_image?: string | null
+}
+
 export interface BookingDetail extends BookingSummary {
   customer: number
   package: number | null
@@ -51,6 +57,23 @@ export interface CreateBookingPayload {
 }
 
 export interface CreateBookingResponse {
+  exito: boolean
+  mensaje: string
+  numero_reserva: string
+  detalles: BookingDetail
+}
+
+// Stripe payment types
+export interface CreatePaymentIntentResponse {
+  exito: boolean
+  mensaje: string
+  client_secret: string
+  payment_intent_id: string
+  amount: string
+  currency: string
+}
+
+export interface ConfirmPaymentResponse {
   exito: boolean
   mensaje: string
   numero_reserva: string

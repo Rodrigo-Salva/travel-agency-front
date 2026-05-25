@@ -5,6 +5,8 @@ import type {
   BookingDetail,
   CreateBookingPayload,
   CreateBookingResponse,
+  CreatePaymentIntentResponse,
+  ConfirmPaymentResponse,
 } from '../types/booking.types'
 
 export const bookingsApi = {
@@ -29,6 +31,20 @@ export const bookingsApi = {
 
   async cancel(id: number): Promise<{ exito: boolean; mensaje: string; numero_reserva: string }> {
     const { data } = await apiClient.patch(API.cancelBooking(id))
+    return data
+  },
+
+  async createPaymentIntent(id: number): Promise<CreatePaymentIntentResponse> {
+    const { data } = await apiClient.post<CreatePaymentIntentResponse>(
+      API.createPaymentIntent(id)
+    )
+    return data
+  },
+
+  async confirmPayment(id: number, paymentIntentId: string): Promise<ConfirmPaymentResponse> {
+    const { data } = await apiClient.post<ConfirmPaymentResponse>(API.confirmPayment(id), {
+      payment_intent_id: paymentIntentId,
+    })
     return data
   },
 }

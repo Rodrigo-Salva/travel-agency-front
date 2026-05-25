@@ -5,7 +5,7 @@ import { useHotels } from '@/features/hotels/hooks/useHotels'
 import { HotelCard, HotelCardSkeleton } from '@/features/hotels/components/HotelCard'
 import { Input } from '@/components/ui/input'
 import type { HotelFilters } from '@/features/hotels/types/hotel.types'
-import { Search, Star, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Star, X, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react'
 
 const STARS = [5, 4, 3, 2, 1]
 const ORDERINGS = [
@@ -17,6 +17,7 @@ const ORDERINGS = [
 
 export default function HotelsPage() {
   const [filters, setFilters] = useState<HotelFilters>({ page: 1, page_size: 12 })
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const { data, isLoading } = useHotels(filters)
 
   const totalPages = data ? Math.ceil(data.count / (filters.page_size ?? 12)) : 0
@@ -26,14 +27,16 @@ export default function HotelsPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
-            <Star className="h-4 w-4" />
+      <div className="relative overflow-hidden bg-brand-dark border-b border-brand-steel/15 pt-16 pb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-600/30 to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex items-center gap-2 text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
+            <Star className="h-3.5 w-3.5" />
             Alojamiento premium
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-4">Hoteles</h1>
-          <p className="text-brand-silver max-w-2xl text-lg">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Hoteles</h1>
+          <p className="text-brand-silver/80 max-w-xl">
             Hospedaje seleccionado en los mejores destinos. Desde boutiques con encanto hasta resorts de lujo.
           </p>
         </div>
@@ -97,25 +100,43 @@ export default function HotelsPage() {
         </div>
 
         {!isLoading && data && (
-          <p className="text-sm text-brand-steel mb-6">
-            {data.count} hotel{data.count !== 1 ? 'es' : ''} encontrado{data.count !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-brand-steel">
+              {data.count} hotel{data.count !== 1 ? 'es' : ''} encontrado{data.count !== 1 ? 's' : ''}
+            </p>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-brand-dark border border-brand-steel/10">
+              <button onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <HotelCardSkeleton key={i} />)
-            : data?.hotels.length === 0
-            ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <Star className="h-12 w-12 text-brand-steel/40 mb-4" />
-                <p className="text-brand-silver text-lg font-medium">No se encontraron hoteles</p>
-                <p className="text-brand-steel text-sm mt-2">Intenta con otros filtros</p>
-              </div>
-            )
-            : data?.hotels.map((hotel) => <HotelCard key={hotel.id} hotel={hotel} />)}
-        </div>
+        {/* Results */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => <HotelCardSkeleton key={i} />)}
+          </div>
+        ) : data?.hotels.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Star className="h-12 w-12 text-brand-steel/40 mb-4" />
+            <p className="text-brand-silver text-lg font-medium">No se encontraron hoteles</p>
+            <p className="text-brand-steel text-sm mt-2">Intenta con otros filtros</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data?.hotels.map((hotel) => <HotelCard key={hotel.id} hotel={hotel} />)}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {data?.hotels.map((hotel) => <HotelCard key={hotel.id} hotel={hotel} listMode />)}
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
