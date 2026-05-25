@@ -5,7 +5,7 @@ import { formatPrice } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants/routes'
 import type { Hotel } from '../types/hotel.types'
 
-interface Props { hotel: Hotel }
+interface Props { hotel: Hotel; listMode?: boolean }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
 
@@ -19,7 +19,7 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-export function HotelCard({ hotel }: Props) {
+export function HotelCard({ hotel, listMode }: Props) {
   const imageUrl = hotel.image
     ? hotel.image.startsWith('http') ? hotel.image : `${BASE_URL}${hotel.image}`
     : null
@@ -27,6 +27,51 @@ export function HotelCard({ hotel }: Props) {
   const amenitiesList = hotel.amenities
     ? hotel.amenities.split(',').map(a => a.trim()).filter(Boolean).slice(0, 3)
     : []
+
+  if (listMode) return (
+    <Link href={ROUTES.hotel(hotel.id)}
+      className="group flex flex-row rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark hover:border-brand-wine/35 transition-all duration-300">
+      <div className="relative w-40 sm:w-52 shrink-0 overflow-hidden bg-brand-darkest">
+        {imageUrl ? (
+          <Image src={imageUrl} alt={hotel.name} fill
+            className="object-cover group-hover:scale-[1.05] transition-transform duration-700"
+            sizes="208px" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-900/30 to-brand-darkest flex items-center justify-center">
+            <Star className="h-8 w-8 text-brand-steel/20" />
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <div className="flex items-center gap-0.5 bg-brand-darkest/80 backdrop-blur-sm border border-brand-steel/20 rounded-full px-2 py-0.5">
+            <StarRating rating={hotel.star_rating} />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col flex-1 p-4 min-w-0">
+        <div className="flex items-center gap-1 text-brand-rose text-xs font-semibold mb-1 uppercase tracking-wide">
+          <MapPin className="h-3 w-3" /> {hotel.destination?.name ?? '—'}{hotel.destination?.country ? `, ${hotel.destination.country}` : ''}
+        </div>
+        <h3 className="font-bold text-white text-sm leading-snug mb-1 group-hover:text-brand-rose transition-colors line-clamp-1">{hotel.name}</h3>
+        {hotel.address && <p className="text-xs text-brand-silver/70 line-clamp-1 mb-2">{hotel.address}</p>}
+        {amenitiesList.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {amenitiesList.map(a => (
+              <span key={a} className="text-[11px] px-2 py-0.5 rounded-full bg-brand-darkest border border-brand-steel/15 text-brand-silver/80">{a}</span>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center justify-between mt-auto">
+          <div>
+            <p className="text-[10px] text-brand-steel uppercase tracking-widest">Desde</p>
+            <p className="font-display text-lg font-bold text-white">{formatPrice(hotel.price_per_night)}</p>
+          </div>
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-xs font-semibold group-hover:bg-brand-wine group-hover:text-white transition-colors">
+            Ver más <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
     <Link href={ROUTES.hotel(hotel.id)}

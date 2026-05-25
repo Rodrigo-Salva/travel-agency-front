@@ -5,7 +5,7 @@ import { formatPrice } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants/routes'
 import type { Activity, ActivityType, DifficultyLevel } from '../types/activity.types'
 
-interface Props { activity: Activity }
+interface Props { activity: Activity; listMode?: boolean }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
 
@@ -21,13 +21,59 @@ const DIFFICULTY_CONFIG: Record<DifficultyLevel, { label: string; classes: strin
   difficult:{ label: 'Difícil',  classes: 'text-red-400 bg-red-500/10 border-red-500/20',           icon: Zap },
 }
 
-export function ActivityCard({ activity }: Props) {
+export function ActivityCard({ activity, listMode }: Props) {
   const imageUrl = activity.image
     ? activity.image.startsWith('http') ? activity.image : `${BASE_URL}${activity.image}`
     : null
 
   const diff = DIFFICULTY_CONFIG[activity.difficulty_level]
   const DiffIcon = diff.icon
+
+  if (listMode) return (
+    <Link href={ROUTES.activity(activity.id)}
+      className="group flex flex-row rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark hover:border-brand-wine/35 transition-all duration-300">
+      <div className="relative w-40 sm:w-52 shrink-0 overflow-hidden bg-brand-darkest">
+        {imageUrl ? (
+          <Image src={imageUrl} alt={activity.name} fill
+            className="object-cover group-hover:scale-[1.05] transition-transform duration-700"
+            sizes="208px" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-brand-darkest flex items-center justify-center">
+            <Zap className="h-8 w-8 text-brand-steel/20" />
+          </div>
+        )}
+        <div className="absolute top-2 left-2">
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-brand-darkest/80 backdrop-blur-sm border border-brand-steel/20 text-brand-silver">
+            {ACTIVITY_LABELS[activity.activity_type]}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col flex-1 p-4 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${diff.classes}`}>
+            <DiffIcon className="h-3 w-3" /> {diff.label}
+          </span>
+          <span className="text-[11px] text-brand-steel flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {activity.duration_hours}h
+          </span>
+          <span className="text-[11px] text-brand-steel flex items-center gap-1">
+            <Users className="h-3 w-3" /> Máx {activity.max_group_size}
+          </span>
+        </div>
+        <h3 className="font-bold text-white text-sm leading-snug mb-1 group-hover:text-brand-rose transition-colors line-clamp-1">{activity.name}</h3>
+        <p className="text-xs text-brand-silver/80 line-clamp-2 mb-3 flex-1">{activity.description}</p>
+        <div className="flex items-center justify-between mt-auto">
+          <div>
+            <p className="text-[10px] text-brand-steel uppercase tracking-widest">Por persona</p>
+            <p className="font-display text-lg font-bold text-white">{formatPrice(activity.price_per_person)}</p>
+          </div>
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-xs font-semibold group-hover:bg-brand-wine group-hover:text-white transition-colors">
+            Ver más <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
     <Link href={ROUTES.activity(activity.id)}

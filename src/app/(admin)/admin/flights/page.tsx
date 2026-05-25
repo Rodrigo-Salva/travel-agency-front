@@ -7,12 +7,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plane, Search, Loader2, ArrowRight, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { apiClient } from '@/lib/api/client'
 import { API } from '@/lib/api/endpoints'
 import { formatPrice } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { ROUTES } from '@/lib/constants/routes'
 
 interface Flight {
   id: number
@@ -95,7 +97,7 @@ const schema = z.object({
   departure_time: z.string().min(1, 'Requerido'),
   arrival_time: z.string().min(1, 'Requerido'),
   flight_class: z.enum(FLIGHT_CLASSES),
-  price: z.coerce.number({ invalid_type_error: 'Requerido' }).min(0),
+  price: z.coerce.number().min(0),
   available_seats: z.coerce.number().min(1),
   baggage_allowance: z.string().optional(),
 })
@@ -107,7 +109,8 @@ function FlightModal({ flight, onClose }: { flight: Flight | null; onClose: () =
   const isEdit = !!flight
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: isEdit
       ? {
           airline_name: flight.airline_name,
@@ -305,11 +308,11 @@ export default function AdminFlightsPage() {
           <h1 className="font-display text-3xl font-bold text-white">Vuelos</h1>
           <p className="text-brand-silver text-sm mt-1">{total} vuelos registrados</p>
         </div>
-        <button onClick={() => { setModalFlight(null); setModalOpen(true) }}
+        <Link href={ROUTES.admin.newFlight}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
           <Plus className="h-4 w-4" />
           Nuevo vuelo
-        </button>
+        </Link>
       </div>
 
       <div className="relative max-w-sm">
@@ -362,10 +365,10 @@ export default function AdminFlightsPage() {
                     <td className="px-4 py-3 font-semibold text-white">{formatPrice(f.price)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => { setModalFlight(f); setModalOpen(true) }}
+                        <Link href={ROUTES.admin.editFlight(f.id)}
                           className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                         {deletingId === f.id ? (
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => deleteMutation.mutate(f.id)} disabled={deleteMutation.isPending}

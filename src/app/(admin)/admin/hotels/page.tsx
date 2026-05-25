@@ -7,12 +7,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Hotel, Search, Star, Loader2, Trash2, MapPin, Plus, Pencil, X, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { hotelsApi } from '@/features/hotels/api/hotels.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { formatPrice, resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { ROUTES } from '@/lib/constants/routes'
 import type { Hotel as HotelType } from '@/features/hotels/types/hotel.types'
 
 const PAGE_SIZE = 8
@@ -58,10 +60,10 @@ function Pagination({ page, total, pageSize, onChange }: { page: number; total: 
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
-  destination: z.coerce.number({ invalid_type_error: 'Requerido' }).min(1, 'Selecciona un destino'),
+  destination: z.coerce.number().min(1, 'Selecciona un destino'),
   address: z.string().min(3, 'Requerido'),
   star_rating: z.coerce.number().min(1).max(5),
-  price_per_night: z.coerce.number({ invalid_type_error: 'Requerido' }).min(0),
+  price_per_night: z.coerce.number().min(0),
   total_rooms: z.coerce.number().min(1),
   description: z.string().optional(),
   amenities: z.string().optional(),
@@ -131,7 +133,8 @@ function HotelModal({ hotel, onClose }: { hotel: HotelType | null; onClose: () =
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: isEdit
       ? {
           name: hotel.name,
@@ -330,11 +333,11 @@ export default function AdminHotelsPage() {
           <h1 className="font-display text-3xl font-bold text-white">Hoteles</h1>
           <p className="text-brand-silver text-sm mt-1">{total} hoteles registrados</p>
         </div>
-        <button onClick={() => { setModalHotel(null); setModalOpen(true) }}
+        <Link href={ROUTES.admin.newHotel}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
           <Plus className="h-4 w-4" />
           Nuevo hotel
-        </button>
+        </Link>
       </div>
 
       <div className="relative max-w-sm">
@@ -391,10 +394,10 @@ export default function AdminHotelsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => { setModalHotel(hotel); setModalOpen(true) }}
+                        <Link href={ROUTES.admin.editHotel(hotel.id)}
                           className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                         {deletingId === hotel.id ? (
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => deleteMutation.mutate(hotel.id)} disabled={deleteMutation.isPending}

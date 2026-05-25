@@ -3,13 +3,15 @@
 import { use } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Users, Zap, Mountain, Smile, MapPin, ChevronRight, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Clock, Users, Zap, Mountain, Smile, MapPin, ChevronRight, MessageSquare, CheckCircle2, Shield, Camera, Coffee, Utensils, Shirt, AlertTriangle } from 'lucide-react'
 import { useActivity } from '@/features/activities/hooks/useActivities'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import type { ActivityType, DifficultyLevel } from '@/features/activities/types/activity.types'
 import { InlineReviewSection } from '@/features/reviews/components/InlineReviewSection'
+import { PackageGallery } from '@/components/packages/PackageGallery'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -68,25 +70,37 @@ export default function ActivityDetailPage({ params }: Props) {
   const diff = DIFFICULTY_CONFIG[activity.difficulty_level]
   const DiffIcon = diff.icon
 
+  const galleryImages = [
+    ...(imageUrl ? [imageUrl] : []),
+    ...(activity.images ?? []).map((img: { image: string }) => {
+      const src = img.image
+      return src.startsWith('http') ? src : `${BASE_URL}${src}`
+    }),
+  ]
+
+  // Qué incluye según el tipo de actividad
+  const INCLUDES_BY_TYPE: Record<ActivityType, { icon: typeof CheckCircle2; text: string }[]> = {
+    adventure:     [{ icon: Shield, text: 'Equipo de seguridad' }, { icon: Users, text: 'Guía certificado' }, { icon: Camera, text: 'Fotos del recorrido' }],
+    sightseeing:   [{ icon: Users, text: 'Guía turístico' }, { icon: Camera, text: 'Paradas fotográficas' }, { icon: Coffee, text: 'Refrigerio incluido' }],
+    cultural:      [{ icon: Users, text: 'Guía cultural bilingüe' }, { icon: Camera, text: 'Material informativo' }, { icon: Coffee, text: 'Degustación local' }],
+    dining:        [{ icon: Utensils, text: 'Menú degustación' }, { icon: Coffee, text: 'Bebidas incluidas' }, { icon: Users, text: 'Chef anfitrión' }],
+    sports:        [{ icon: Shield, text: 'Equipo deportivo' }, { icon: Users, text: 'Instructor certificado' }, { icon: Shirt, text: 'Uniforme incluido' }],
+    wellness:      [{ icon: Coffee, text: 'Bebidas naturales' }, { icon: Shield, text: 'Productos naturales' }, { icon: Users, text: 'Instructor especializado' }],
+    shopping:      [{ icon: Users, text: 'Guía de compras' }, { icon: Camera, text: 'Recorrido por mercados' }, { icon: Coffee, text: 'Snack incluido' }],
+    entertainment: [{ icon: Camera, text: 'Acceso a show' }, { icon: Coffee, text: 'Bebida de bienvenida' }, { icon: Users, text: 'Anfitrión en vivo' }],
+  }
+
+  const includes = INCLUDES_BY_TYPE[activity.activity_type] ?? []
+
   return (
     <div className="min-h-screen bg-brand-darkest">
-      {/* Hero */}
-      <div className="relative h-[360px] bg-brand-dark overflow-hidden">
-        {imageUrl ? (
-          <Image src={imageUrl} alt={activity.name} fill className="object-cover" priority sizes="100vw" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-wine/10 to-brand-darkest" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/30 to-transparent" />
-
-        <div className="absolute top-6 left-0 right-0 container mx-auto px-4">
-          <Link href={ROUTES.activities} className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg">
+      {/* Top nav */}
+      <div className="sticky top-0 z-20 bg-brand-darkest/90 backdrop-blur-md border-b border-brand-steel/10">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href={ROUTES.activities} className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" /> Todas las actividades
           </Link>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2">
             <Badge className="bg-brand-wine/90 border-0 text-white">
               {ACTIVITY_LABELS[activity.activity_type]}
             </Badge>
@@ -95,17 +109,60 @@ export default function ActivityDetailPage({ params }: Props) {
               {diff.label}
             </span>
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-2">{activity.name}</h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 pt-8 pb-4">
+        <Breadcrumbs items={[{ label: 'Actividades', href: ROUTES.activities }, { label: activity.name }]} />
+        {/* Title */}
+        <div className="mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-2">{activity.name}</h1>
+        </div>
+
+        {/* Gallery */}
+        {galleryImages.length > 0 && (
+          <div className="mb-10">
+            <PackageGallery images={galleryImages} alt={activity.name} />
+          </div>
+        )}
+      </div>
+
+      <div className="container mx-auto px-4 py-4 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main */}
           <div className="lg:col-span-2 space-y-8">
             <div>
-              <h2 className="font-display text-2xl font-bold text-white mb-4">Descripcion</h2>
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Descripción</h2>
               <p className="text-brand-silver leading-relaxed text-base">{activity.description}</p>
+            </div>
+
+            {/* Qué incluye */}
+            {includes.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl font-bold text-white mb-4">¿Qué incluye?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {includes.map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-3 p-4 rounded-xl bg-brand-dark border border-brand-steel/10 hover:border-brand-wine/20 transition-colors group">
+                      <div className="w-9 h-9 rounded-lg bg-brand-wine/10 border border-brand-wine/20 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-wine/20 transition-colors">
+                        <Icon className="h-4 w-4 text-brand-rose" />
+                      </div>
+                      <span className="text-sm text-brand-silver">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Qué llevar */}
+            <div className="rounded-xl bg-amber-500/5 border border-amber-500/15 p-4 flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-400 font-semibold text-sm mb-1">Qué llevar</p>
+                <p className="text-brand-silver/80 text-sm leading-relaxed">
+                  Ropa cómoda, calzado apropiado, protector solar, agua y documento de identidad.
+                  {activity.difficulty_level === 'difficult' && ' Condición física apta para actividades de alta exigencia.'}
+                </p>
+              </div>
             </div>
 
             {/* Stats */}

@@ -12,6 +12,8 @@ const FOOTER_LINKS = {
   servicios: [
     { label: 'Mis Reservas',    href: ROUTES.customer.bookings },
     { label: 'Lista de Deseos', href: ROUTES.customer.wishlist },
+    { label: 'Quiénes somos',   href: ROUTES.about },
+    { label: 'FAQ',             href: ROUTES.faq },
     { label: 'Contacto',        href: ROUTES.contact },
   ],
 }

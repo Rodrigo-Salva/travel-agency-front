@@ -13,9 +13,9 @@ import { wishlistApi } from '@/lib/api/wishlist.api'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import type { PackageSummary } from '../types/package.types'
 
-interface Props { pkg: PackageSummary }
+interface Props { pkg: PackageSummary; listMode?: boolean }
 
-export function PackageCard({ pkg }: Props) {
+export function PackageCard({ pkg, listMode }: Props) {
   const { isAuthenticated } = useAuthStore()
   const router = useRouter()
   const qc = useQueryClient()
@@ -43,6 +43,53 @@ export function PackageCard({ pkg }: Props) {
 
   const hasDiscount = pkg.discount_percentage && parseFloat(String(pkg.discount_percentage)) > 0
   const discountPct = hasDiscount ? parseFloat(String(pkg.discount_percentage)).toFixed(0) : null
+
+  if (listMode) return (
+    <Link href={ROUTES.package(pkg.id)}
+      className="group flex flex-row rounded-2xl overflow-hidden border border-brand-steel/10 bg-brand-dark hover:border-brand-wine/35 transition-all duration-300">
+      <div className="relative w-40 sm:w-52 shrink-0 overflow-hidden bg-brand-darkest">
+        {imageUrl ? (
+          <Image src={imageUrl} alt={pkg.name} fill
+            className="object-cover group-hover:scale-[1.05] transition-transform duration-700"
+            sizes="208px" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-wine/20 to-brand-darkest flex items-center justify-center">
+            <MapPin className="h-8 w-8 text-brand-steel/30" />
+          </div>
+        )}
+        {hasDiscount && (
+          <span className="absolute top-2 left-2 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/90 text-white">
+            -{discountPct}% OFF
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col flex-1 p-4 min-w-0">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-brand-rose text-xs font-semibold uppercase tracking-wide flex items-center gap-1">
+            <MapPin className="h-3 w-3" /> {pkg.destination_name}
+          </span>
+          <span className="text-[11px] text-brand-steel flex items-center gap-1 shrink-0">
+            <Clock className="h-3 w-3" /> {pkg.duration_days}d/{pkg.duration_nights}n
+          </span>
+        </div>
+        <h3 className="font-bold text-white text-sm leading-snug mb-1 group-hover:text-brand-rose transition-colors line-clamp-1">
+          {pkg.name}
+        </h3>
+        <p className="text-xs text-brand-silver/80 line-clamp-2 mb-3 flex-1">{pkg.short_description}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-brand-steel uppercase tracking-widest">Desde</p>
+            <p className="font-display text-lg font-bold text-white leading-none">
+              {formatPrice(hasDiscount ? (pkg.discounted_price_adult ?? pkg.price_adult) : pkg.price_adult)}
+            </p>
+          </div>
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-xs font-semibold group-hover:bg-brand-wine group-hover:text-white transition-colors">
+            Ver más <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
     <Link href={ROUTES.package(pkg.id)}

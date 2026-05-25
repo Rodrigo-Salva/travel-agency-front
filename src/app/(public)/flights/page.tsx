@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plane, Search, Clock, Users, ChevronLeft, ChevronRight, ArrowRight, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Plane, Search, Clock, Users, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { API } from '@/lib/api/endpoints'
 import { formatPrice } from '@/lib/utils/format'
@@ -19,11 +20,11 @@ interface Flight {
   destination_airport: string
   departure_time: string
   arrival_time: string
-  duration_minutes: number
-  price_economy: string
-  price_business: string | null
+  duration: string | null
+  flight_class: string
+  price: string
   available_seats: number
-  is_active: boolean
+  baggage_allowance: string | null
 }
 
 const PAGE_SIZE = 9
@@ -31,20 +32,21 @@ const PAGE_SIZE = 9
 function FlightCard({ flight }: { flight: Flight }) {
   const dep = new Date(flight.departure_time)
   const arr = new Date(flight.arrival_time)
-  const h = Math.floor(flight.duration_minutes / 60)
-  const m = flight.duration_minutes % 60
 
   return (
-    <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5 hover:border-brand-wine/20 transition-all">
+    <Link href={`/flights/${flight.id}`} className="group rounded-2xl bg-brand-dark border border-brand-steel/10 p-5 hover:border-brand-wine/30 hover:bg-brand-dark/80 transition-all block">
       {/* Airline */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-white font-semibold">{flight.airline_name}</p>
+          <p className="text-white font-semibold group-hover:text-brand-rose transition-colors">{flight.airline_name}</p>
           <p className="text-brand-steel text-xs font-mono">{flight.airline_code} {flight.flight_number}</p>
         </div>
-        <span className="text-xs bg-brand-wine/10 border border-brand-wine/20 text-brand-rose px-2.5 py-1 rounded-full">
-          {flight.available_seats} asientos
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-xs bg-brand-wine/10 border border-brand-wine/20 text-brand-rose px-2.5 py-1 rounded-full">
+            {flight.available_seats} asientos
+          </span>
+          <span className="text-xs text-brand-steel capitalize">{flight.flight_class}</span>
+        </div>
       </div>
 
       {/* Route */}
@@ -55,10 +57,12 @@ function FlightCard({ flight }: { flight: Flight }) {
           <p className="text-brand-steel text-xs">{flight.origin_airport}</p>
         </div>
         <div className="flex-1 flex flex-col items-center gap-1">
-          <div className="flex items-center gap-1 text-xs text-brand-steel">
-            <Clock className="h-3 w-3" />
-            {h}h {m}m
-          </div>
+          {flight.duration && (
+            <div className="flex items-center gap-1 text-xs text-brand-steel">
+              <Clock className="h-3 w-3" />
+              {flight.duration}
+            </div>
+          )}
           <div className="w-full flex items-center gap-1">
             <div className="flex-1 h-px bg-brand-steel/20" />
             <Plane className="h-3.5 w-3.5 text-brand-wine rotate-90" />
@@ -76,17 +80,14 @@ function FlightCard({ flight }: { flight: Flight }) {
       {/* Price */}
       <div className="flex items-center justify-between pt-4 border-t border-brand-steel/10">
         <div>
-          <p className="text-xs text-brand-steel">Desde</p>
-          <p className="font-display text-xl font-bold text-white">{formatPrice(flight.price_economy)}</p>
-          {flight.price_business && (
-            <p className="text-xs text-brand-steel">Business: {formatPrice(flight.price_business)}</p>
-          )}
+          <p className="text-xs text-brand-steel">Precio por persona</p>
+          <p className="font-display text-xl font-bold text-white">{formatPrice(flight.price)}</p>
         </div>
-        <div className="flex items-center gap-1 text-xs text-brand-steel">
-          <Users className="h-3.5 w-3.5" /> por persona
+        <div className="flex items-center gap-1 text-xs text-brand-rose font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          Ver detalles →
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 

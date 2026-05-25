@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Tag, CheckCircle2, XCircle, Percent, DollarSign, Copy, Check } from 'lucide-react'
+import { Tag, CheckCircle2, XCircle, Percent, DollarSign, Copy, Check, Clock, Flame } from 'lucide-react'
 import { apiClient } from '@/lib/api/client'
 import { API } from '@/lib/api/endpoints'
 import { formatPrice, formatDate } from '@/lib/utils/format'
@@ -21,6 +21,49 @@ interface Coupon {
   max_discount_amount: string | null
   max_uses: number | null
   current_uses: number
+}
+
+function useCountdown(targetDate: string) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false })
+
+  useEffect(() => {
+    function calc() {
+      const diff = new Date(targetDate).getTime() - Date.now()
+      if (diff <= 0) { setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true }); return }
+      setTimeLeft({
+        days:    Math.floor(diff / 86400000),
+        hours:   Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+        expired: false,
+      })
+    }
+    calc()
+    const t = setInterval(calc, 1000)
+    return () => clearInterval(t)
+  }, [targetDate])
+
+  return timeLeft
+}
+
+function CountdownBadge({ validUntil }: { validUntil: string }) {
+  const t = useCountdown(validUntil)
+  if (t.expired) return null
+
+  const isUrgent = t.days < 3
+
+  return (
+    <div className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium mt-3 ${isUrgent ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-amber-500/8 border border-amber-500/15 text-amber-400'}`}>
+      {isUrgent ? <Flame className="h-3.5 w-3.5 flex-shrink-0" /> : <Clock className="h-3.5 w-3.5 flex-shrink-0" />}
+      <span>{isUrgent ? '¡Vence pronto!' : 'Tiempo restante:'}</span>
+      <div className="flex items-center gap-1 ml-auto font-mono">
+        {t.days > 0 && <><span className="bg-black/20 px-1.5 py-0.5 rounded">{String(t.days).padStart(2,'0')}d</span></>}
+        <span className="bg-black/20 px-1.5 py-0.5 rounded">{String(t.hours).padStart(2,'0')}h</span>
+        <span className="bg-black/20 px-1.5 py-0.5 rounded">{String(t.minutes).padStart(2,'0')}m</span>
+        {t.days === 0 && <span className="bg-black/20 px-1.5 py-0.5 rounded animate-pulse">{String(t.seconds).padStart(2,'0')}s</span>}
+      </div>
+    </div>
+  )
 }
 
 function CouponCard({ coupon }: { coupon: Coupon }) {
@@ -88,11 +131,14 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
           )}
         </div>
 
+        {/* Countdown */}
+        {active && <CountdownBadge validUntil={coupon.valid_until} />}
+
         {/* Copy button */}
         {active && (
           <button
             onClick={copy}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-sm font-medium hover:bg-brand-wine hover:text-white transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-wine/10 border border-brand-wine/20 text-brand-rose text-sm font-medium hover:bg-brand-wine hover:text-white transition-colors mt-3"
           >
             {copied ? <><Check className="h-3.5 w-3.5" /> Copiado</> : <><Copy className="h-3.5 w-3.5" /> Copiar código</>}
           </button>

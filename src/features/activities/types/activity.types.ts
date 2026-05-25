@@ -21,6 +21,7 @@ export interface Activity {
   price_per_person: string
   max_group_size: number
   image: string | null
+  images?: { image: string }[]
   is_active: boolean
   created_at: string
 }

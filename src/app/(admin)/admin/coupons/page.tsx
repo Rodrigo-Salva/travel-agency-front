@@ -87,7 +87,7 @@ const schema = z.object({
   code: z.string().min(3, 'Mínimo 3 caracteres').toUpperCase(),
   description: z.string().min(5, 'Mínimo 5 caracteres'),
   discount_type: z.enum(['percentage', 'fixed']),
-  discount_value: z.coerce.number({ invalid_type_error: 'Requerido' }).min(0),
+  discount_value: z.coerce.number().min(0),
   min_purchase_amount: z.coerce.number().min(0).optional(),
   max_discount_amount: z.coerce.number().min(0).optional(),
   valid_from: z.string().min(1, 'Requerido'),
@@ -103,7 +103,8 @@ function CouponModal({ coupon, onClose }: { coupon: Coupon | null; onClose: () =
   const isEdit = !!coupon
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: isEdit
       ? {
           code: coupon.code,

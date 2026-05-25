@@ -28,10 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
+  const BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+  const rawImage = pkg.image ?? pkg.main_image
+  const imageUrl = rawImage
+    ? rawImage.startsWith('http') ? rawImage : `${BASE}${rawImage}`
+    : undefined
+
   const title = `${pkg.name} — TravelAgency`
-  const description = pkg.description
-    ? pkg.description.slice(0, 160)
-    : `Paquete de ${pkg.duration_days} días a ${pkg.destination_name ?? 'destino increíble'}. Desde USD ${pkg.base_price}.`
+  const description = (pkg.short_description ?? pkg.description ?? '')
+    .slice(0, 160) || `Paquete de ${pkg.duration_days ?? '?'} días. Precio desde ${pkg.price_adult ?? pkg.base_price ?? ''}`.trim()
 
   return {
     title,
@@ -40,7 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: 'website',
-      ...(pkg.main_image ? { images: [{ url: pkg.main_image }] } : {}),
+      ...(imageUrl ? { images: [{ url: imageUrl, width: 1200, height: 630, alt: pkg.name }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
     },
   }
 }

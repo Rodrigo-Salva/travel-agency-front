@@ -2,11 +2,15 @@ import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
+import { StatsCounter } from '@/components/home/StatsCounter'
 import { FeaturedDestinations } from '@/features/destinations/components/FeaturedDestinations'
 import { FeaturedPackages } from '@/features/packages/components/FeaturedPackages'
 import { FeaturedHotels } from '@/components/home/FeaturedHotels'
 import { FeaturedActivities } from '@/components/home/FeaturedActivities'
 import { WhyUs } from '@/components/home/WhyUs'
+import { Testimonials } from '@/components/home/Testimonials'
+import { Newsletter } from '@/components/home/Newsletter'
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton'
 import { ROUTES } from '@/lib/constants/routes'
 
 export const metadata = {
@@ -21,11 +25,14 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
+        <StatsCounter />
         <FeaturedDestinations />
         <FeaturedPackages />
         <FeaturedHotels />
         <FeaturedActivities />
         <WhyUs />
+        <Testimonials />
+        <Newsletter />
 
         {/* CTA final */}
         <section className="py-20 bg-brand-darkest border-t border-brand-steel/10">
@@ -58,6 +65,7 @@ export default function HomePage() {
         </section>
       </main>
       <Footer />
+      <WhatsAppButton />
     </>
   )
 }

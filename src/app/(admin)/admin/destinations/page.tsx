@@ -7,11 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { MapPin, Plus, Search, Pencil, Trash2, Loader2, Star, X, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { ROUTES } from '@/lib/constants/routes'
 import type { Destination } from '@/features/destinations/types/destination.types'
 
 const PAGE_SIZE = 8
@@ -299,11 +301,11 @@ export default function AdminDestinationsPage() {
           <h1 className="font-display text-3xl font-bold text-white">Destinos</h1>
           <p className="text-brand-silver text-sm mt-1">{total} destinos registrados</p>
         </div>
-        <button onClick={openNew}
+        <Link href={ROUTES.admin.newDestination}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
           <Plus className="h-4 w-4" />
           Nuevo destino
-        </button>
+        </Link>
       </div>
 
       <div className="relative max-w-sm">
@@ -359,10 +361,10 @@ export default function AdminDestinationsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openEdit(dest)}
+                        <Link href={ROUTES.admin.editDestination(dest.id)}
                           className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                         {deletingId === dest.id ? (
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => deleteMutation.mutate(dest.id)} disabled={deleteMutation.isPending}

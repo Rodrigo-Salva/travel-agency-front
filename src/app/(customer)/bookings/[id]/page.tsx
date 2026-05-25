@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -8,6 +8,7 @@ import Link from 'next/link'
 import {
   ChevronLeft, CalendarDays, Users, Clock, CheckCircle2, XCircle,
   AlertCircle, Loader2, DollarSign, FileText, User, Printer, CreditCard, Download,
+  Plane, MapPin, Star, ClipboardList,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { bookingsApi } from '@/features/bookings/api/bookings.api'
@@ -37,6 +38,200 @@ const PAYMENT_CONFIG: Record<PaymentStatus, { label: string; dot: string }> = {
 
 const PASSENGER_TYPE: Record<string, string> = {
   adult: 'Adulto', child: 'Niño', infant: 'Infante'
+}
+
+// ── Timeline steps ────────────────────────────────────────────────────────────
+const TIMELINE_STEPS: { key: BookingStatus | '_travel'; label: string; icon: typeof CheckCircle2 }[] = [
+  { key: 'pending',   label: 'Reserva creada',  icon: FileText },
+  { key: 'confirmed', label: 'Confirmada',       icon: CheckCircle2 },
+  { key: '_travel',   label: 'En viaje',         icon: Plane },
+  { key: 'completed', label: 'Completada',        icon: Star },
+]
+
+function BookingTimeline({ status, travelDate }: { status: BookingStatus; travelDate?: string }) {
+  const isInTravel = status === 'confirmed' && travelDate && new Date(travelDate) <= new Date()
+  const isCancelled = status === 'cancelled'
+
+  function stepState(key: string) {
+    if (isCancelled) return key === 'pending' ? 'done' : 'cancelled'
+    const order: string[] = ['pending', 'confirmed', '_travel', 'completed']
+    const current = isInTravel ? '_travel' : status
+    const ci = order.indexOf(current)
+    const si = order.indexOf(key)
+    if (si < ci) return 'done'
+    if (si === ci) return 'active'
+    return 'upcoming'
+  }
+
+  if (isCancelled) {
+    return (
+      <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/15">
+        <XCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+        <p className="text-red-400 font-medium text-sm">Esta reserva fue cancelada.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-start gap-0 overflow-x-auto pb-1">
+      {TIMELINE_STEPS.map((step, i) => {
+        const state = stepState(step.key)
+        const Icon = step.icon
+        const isLast = i === TIMELINE_STEPS.length - 1
+        return (
+          <div key={step.key} className="flex items-center flex-1 min-w-[80px]">
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                state === 'done'    ? 'bg-emerald-500 border-emerald-500 text-white' :
+                state === 'active' ? 'bg-brand-wine border-brand-wine text-white scale-110 shadow-lg shadow-brand-wine/30' :
+                                     'bg-brand-darkest border-brand-steel/20 text-brand-steel/40'
+              }`}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className={`text-[10px] font-medium text-center leading-tight whitespace-nowrap px-1 ${
+                state === 'active' ? 'text-brand-rose' : state === 'done' ? 'text-emerald-400' : 'text-brand-steel/50'
+              }`}>{step.label}</span>
+            </div>
+            {!isLast && (
+              <div className={`h-0.5 flex-1 mx-1 mb-4 rounded-full ${
+                stepState(TIMELINE_STEPS[i + 1].key) !== 'upcoming' || state === 'done' ? 'bg-emerald-500/50' : 'bg-brand-steel/15'
+              }`} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Countdown hasta viaje ─────────────────────────────────────────────────────
+function TripCountdown({ travelDate }: { travelDate: string }) {
+  const [days, setDays] = useState(0)
+  const [hours, setHours] = useState(0)
+  const [minutes, setMinutes] = useState(0)
+
+  useEffect(() => {
+    function calc() {
+      const diff = new Date(travelDate).getTime() - Date.now()
+      if (diff <= 0) return
+      setDays(Math.floor(diff / 86400000))
+      setHours(Math.floor((diff % 86400000) / 3600000))
+      setMinutes(Math.floor((diff % 3600000) / 60000))
+    }
+    calc()
+    const t = setInterval(calc, 60000)
+    return () => clearInterval(t)
+  }, [travelDate])
+
+  const diff = new Date(travelDate).getTime() - Date.now()
+  if (diff <= 0) return null
+
+  return (
+    <div className="rounded-2xl bg-brand-dark border border-brand-wine/20 p-5 flex flex-col sm:flex-row items-center gap-5">
+      <div className="w-12 h-12 rounded-xl bg-brand-wine/15 border border-brand-wine/25 flex items-center justify-center flex-shrink-0">
+        <Plane className="h-6 w-6 text-brand-rose" />
+      </div>
+      <div className="flex-1 text-center sm:text-left">
+        <p className="section-label mb-1">Tiempo para tu viaje</p>
+        <p className="text-brand-silver/70 text-sm">¡Ya falta poco! Prepara tu maleta.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        {[{ v: days, l: 'días' }, { v: hours, l: 'horas' }, { v: minutes, l: 'min' }].map(({ v, l }) => (
+          <div key={l} className="text-center">
+            <p className="font-display text-3xl font-bold text-white leading-none">{String(v).padStart(2, '0')}</p>
+            <p className="text-brand-steel text-[10px] uppercase tracking-wider">{l}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Checklist de documentos ───────────────────────────────────────────────────
+const CHECKLIST_ITEMS = [
+  { id: 'passport',  label: 'Pasaporte vigente (min. 6 meses de validez)' },
+  { id: 'visa',      label: 'Visa / permisos de entrada (si aplica)' },
+  { id: 'insurance', label: 'Seguro de viaje contratado' },
+  { id: 'tickets',   label: 'Tickets de vuelo impresos o en el teléfono' },
+  { id: 'hotel',     label: 'Vouchers de hotel' },
+  { id: 'money',     label: 'Efectivo / tarjeta para el destino' },
+  { id: 'clothes',   label: 'Ropa adecuada para el clima' },
+  { id: 'meds',      label: 'Medicamentos personales' },
+]
+
+function TravelChecklist({ bookingId }: { bookingId: string }) {
+  const storageKey = `checklist-${bookingId}`
+  const [checked, setChecked] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set()
+    try { return new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]')) }
+    catch { return new Set() }
+  })
+
+  function toggle(id: string) {
+    setChecked(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      localStorage.setItem(storageKey, JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  const done = checked.size
+  const total = CHECKLIST_ITEMS.length
+  const pct = Math.round((done / total) * 100)
+
+  return (
+    <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-white flex items-center gap-2">
+          <ClipboardList className="h-4 w-4 text-brand-wine" /> Checklist de viaje
+        </h2>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${pct === 100 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-brand-steel/10 text-brand-steel'}`}>
+          {done}/{total} completados
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 rounded-full bg-brand-steel/15 mb-5 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-brand-wine transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      <div className="space-y-2">
+        {CHECKLIST_ITEMS.map(item => {
+          const isChecked = checked.has(item.id)
+          return (
+            <button
+              key={item.id}
+              onClick={() => toggle(item.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                isChecked
+                  ? 'bg-emerald-500/5 border-emerald-500/20'
+                  : 'bg-brand-darkest/40 border-brand-steel/10 hover:border-brand-steel/25'
+              }`}
+            >
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border transition-all ${
+                isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-brand-steel/30'
+              }`}>
+                {isChecked && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+              </div>
+              <span className={`text-sm transition-colors ${isChecked ? 'line-through text-brand-steel' : 'text-brand-silver'}`}>
+                {item.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {pct === 100 && (
+        <div className="mt-4 flex items-center gap-2 text-emerald-400 text-sm font-medium">
+          <CheckCircle2 className="h-4 w-4" /> ¡Todo listo! Buen viaje.
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function BookingDetailPage() {
@@ -233,6 +428,19 @@ export default function BookingDetailPage() {
 
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
 
+        {/* Timeline */}
+        <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
+          <h2 className="font-semibold text-white mb-5 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-brand-wine" /> Estado de la reserva
+          </h2>
+          <BookingTimeline status={booking.status} travelDate={booking.travel_date ?? undefined} />
+        </div>
+
+        {/* Countdown */}
+        {booking.travel_date && (booking.status === 'confirmed' || booking.status === 'pending') && (
+          <TripCountdown travelDate={booking.travel_date} />
+        )}
+
         {/* Detalles del viaje */}
         <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">
           <h2 className="font-semibold text-white mb-5 flex items-center gap-2">
@@ -334,6 +542,11 @@ export default function BookingDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Checklist de documentos */}
+        {(booking.status === 'confirmed' || booking.status === 'pending') && (
+          <TravelChecklist bookingId={String(booking.id)} />
+        )}
 
         {/* Voucher / Imprimir */}
         <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-6">

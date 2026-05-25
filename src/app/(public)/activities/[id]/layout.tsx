@@ -28,10 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
+  const BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+  const rawImage = activity.image ?? activity.main_image
+  const imageUrl = rawImage
+    ? rawImage.startsWith('http') ? rawImage : `${BASE}${rawImage}`
+    : undefined
+
   const title = `${activity.name} — TravelAgency`
-  const description = activity.description
-    ? activity.description.slice(0, 160)
-    : `${activity.name} en ${activity.destination_name ?? 'destino increíble'}. Duración: ${activity.duration_hours ?? '?'} horas. Desde USD ${activity.price_per_person}.`
+  const description = (activity.description ?? '')
+    .slice(0, 160) || `${activity.name}. Duración: ${activity.duration_hours ?? '?'} horas. Desde $${activity.price_per_person} por persona.`
 
   return {
     title,
@@ -40,7 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: 'website',
-      ...(activity.main_image ? { images: [{ url: activity.main_image }] } : {}),
+      ...(imageUrl ? { images: [{ url: imageUrl, width: 1200, height: 630, alt: activity.name }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
     },
   }
 }

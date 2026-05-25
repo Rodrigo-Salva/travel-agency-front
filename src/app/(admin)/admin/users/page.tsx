@@ -113,6 +113,8 @@ function UserModal({ user, onClose }: { user: AdminUser | null; onClose: () => v
   })
 
   const fc = 'bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reg = (form: any, name: string) => form.register(name)
 
   const Fields = ({ form, withPassword }: { form: typeof createForm | typeof editForm; withPassword?: boolean }) => (
     <div className="space-y-4">
@@ -153,27 +155,27 @@ function UserModal({ user, onClose }: { user: AdminUser | null; onClose: () => v
         )}
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">Nombre</Label>
-          <Input {...form.register('first_name' as never)} className={fc} />
+          <Input {...reg(form, 'first_name')} className={fc} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">Apellido</Label>
-          <Input {...form.register('last_name' as never)} className={fc} />
+          <Input {...reg(form, 'last_name')} className={fc} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">Teléfono</Label>
-          <Input {...form.register('phone' as never)} className={fc} />
+          <Input {...reg(form, 'phone')} className={fc} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">País</Label>
-          <Input {...form.register('country' as never)} className={fc} />
+          <Input {...reg(form, 'country')} className={fc} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">Ciudad</Label>
-          <Input {...form.register('city' as never)} className={fc} />
+          <Input {...reg(form, 'city')} className={fc} />
         </div>
         <div className="space-y-1.5">
           <Label className="text-brand-silver text-xs">Rol</Label>
-          <select {...form.register('user_type' as never)} className="w-full bg-brand-darkest border border-brand-steel/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand-wine">
+          <select {...reg(form, 'user_type')} className="w-full bg-brand-darkest border border-brand-steel/20 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand-wine">
             <option value="customer">Cliente</option>
             <option value="admin">Admin</option>
           </select>

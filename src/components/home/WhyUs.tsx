@@ -1,4 +1,7 @@
+'use client'
+
 import { Shield, HeadphonesIcon, Globe, Award, Clock, CreditCard } from 'lucide-react'
+import { FadeIn } from '@/components/ui/FadeIn'
 
 const FEATURES = [
   { icon: Shield,         title: 'Viajes seguros',      desc: 'Todos nuestros paquetes incluyen seguro de viaje y asistencia 24/7.' },
@@ -13,7 +16,7 @@ export function WhyUs() {
   return (
     <section className="py-24 bg-brand-dark relative overflow-hidden">
       <div className="container mx-auto px-4 relative">
-        <div className="text-center mb-14">
+        <FadeIn className="text-center mb-14">
           <p className="section-label mb-3">Por qué elegirnos</p>
           <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-5 leading-tight">
             Tu viaje, <span className="text-gradient-brand italic">nuestra prioridad</span>
@@ -21,17 +24,19 @@ export function WhyUs() {
           <p className="text-brand-silver/70 text-lg max-w-2xl mx-auto">
             Más de 10,000 viajeros confían en nosotros cada año para crear experiencias inolvidables.
           </p>
-        </div>
+        </FadeIn>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-2xl p-6 bg-brand-darkest border border-brand-steel/10 card-depth hover:card-depth-hover hover:-translate-y-0.5 transition-all duration-300 group">
-              <div className="w-11 h-11 rounded-xl bg-brand-wine/10 border border-brand-wine/20 flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-wine/20">
-                <Icon className="h-5 w-5 text-brand-rose" />
+          {FEATURES.map(({ icon: Icon, title, desc }, i) => (
+            <FadeIn key={title} delay={i * 80} direction="up">
+              <div className="rounded-2xl p-6 bg-brand-darkest border border-brand-steel/10 card-depth hover:card-depth-hover hover:-translate-y-0.5 transition-all duration-300 group h-full">
+                <div className="w-11 h-11 rounded-xl bg-brand-wine/10 border border-brand-wine/20 flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-wine/20">
+                  <Icon className="h-5 w-5 text-brand-rose" />
+                </div>
+                <h3 className="font-display font-bold text-white mb-2.5 group-hover:text-brand-rose transition-colors">{title}</h3>
+                <p className="text-brand-silver/70 text-sm leading-relaxed">{desc}</p>
               </div>
-              <h3 className="font-display font-bold text-white mb-2.5 group-hover:text-brand-rose transition-colors">{title}</h3>
-              <p className="text-brand-silver/70 text-sm leading-relaxed">{desc}</p>
-            </div>
+            </FadeIn>
           ))}
         </div>
       </div>

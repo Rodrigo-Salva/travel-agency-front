@@ -6,7 +6,7 @@ import { usePackages } from '@/features/packages/hooks/usePackages'
 import { PackageCard, PackageCardSkeleton } from '@/features/packages/components/PackageCard'
 import { PackageFiltersBar } from '@/features/packages/components/PackageFilters'
 import type { PackageFilters } from '@/features/packages/types/package.types'
-import { ChevronLeft, ChevronRight, Package, GitCompare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Package, GitCompare, LayoutGrid, List } from 'lucide-react'
 import Link from 'next/link'
 import { ROUTES } from '@/lib/constants/routes'
 
@@ -14,6 +14,7 @@ function PackagesContent() {
   const searchParams = useSearchParams()
   const initialSearch = searchParams.get('search') ?? ''
   const [filters, setFilters] = useState<PackageFilters>({ page: 1, page_size: 12, search: initialSearch || undefined })
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
     const s = searchParams.get('search')
@@ -62,29 +63,45 @@ function PackagesContent() {
           />
         </div>
 
-        {/* Results count */}
+        {/* Results count + view toggle */}
         {!isLoading && data && (
-          <p className="text-sm text-brand-steel mb-6">
-            {data.count} paquete{data.count !== 1 ? 's' : ''} encontrado{data.count !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-brand-steel">
+              {data.count} paquete{data.count !== 1 ? 's' : ''} encontrado{data.count !== 1 ? 's' : ''}
+            </p>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-brand-dark border border-brand-steel/10">
+              <button onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <PackageCardSkeleton key={i} />)
-            : data?.packages.length === 0
-            ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <Package className="h-12 w-12 text-brand-steel/40 mb-4" />
-                <p className="text-brand-silver text-lg font-medium">No se encontraron paquetes</p>
-                <p className="text-brand-steel text-sm mt-2">Intenta ajustar los filtros de busqueda</p>
-              </div>
-            )
-            : data?.packages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
-            ))}
-        </div>
+        {/* Results */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 12 }).map((_, i) => <PackageCardSkeleton key={i} />)}
+          </div>
+        ) : data?.packages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Package className="h-12 w-12 text-brand-steel/40 mb-4" />
+            <p className="text-brand-silver text-lg font-medium">No se encontraron paquetes</p>
+            <p className="text-brand-steel text-sm mt-2">Intenta ajustar los filtros de busqueda</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {data?.packages.map((pkg) => <PackageCard key={pkg.id} pkg={pkg} />)}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {data?.packages.map((pkg) => <PackageCard key={pkg.id} pkg={pkg} listMode />)}
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (

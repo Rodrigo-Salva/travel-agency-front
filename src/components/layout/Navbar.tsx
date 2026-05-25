@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { label: 'Paquetes',    href: ROUTES.packages,     icon: Globe },
   { label: 'Hoteles',     href: ROUTES.hotels,        icon: Hotel },
   { label: 'Actividades', href: ROUTES.activities,    icon: Activity },
+  { label: 'Nosotros',    href: ROUTES.about,         icon: Star },
 ]
 
 const NOTIF_ICONS: Record<string, typeof Bell> = {
@@ -95,7 +96,7 @@ function NotificationBell() {
                 <Bell className="h-8 w-8 text-brand-steel/30 mx-auto mb-2" />
                 <p className="text-brand-steel text-sm">Sin notificaciones</p>
               </div>
-            ) : notifications.map((n: AppNotification) => {
+            ) : notifications.slice(0, 8).map((n: AppNotification) => {
               const Icon = NOTIF_ICONS[n.type] ?? Bell
               return (
                 <button key={n.id} onClick={() => { markOne.mutate(n.id); setOpen(false) }}
@@ -112,6 +113,15 @@ function NotificationBell() {
                 </button>
               )
             })}
+          </div>
+          <div className="border-t border-brand-steel/10 px-4 py-2.5">
+            <Link
+              href="/notifications"
+              onClick={() => setOpen(false)}
+              className="block text-center text-xs text-brand-wine hover:text-brand-rose font-medium transition-colors py-1"
+            >
+              Ver todas las notificaciones →
+            </Link>
           </div>
         </div>
       )}
@@ -186,6 +196,9 @@ export function Navbar() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => router.push(ROUTES.customer.reviews)} className="flex items-center gap-2 text-brand-silver cursor-pointer">
                         <Star className="h-4 w-4" /> Mis Reseñas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(ROUTES.customer.notifications)} className="flex items-center gap-2 text-brand-silver cursor-pointer">
+                        <Bell className="h-4 w-4" /> Notificaciones
                       </DropdownMenuItem>
                     </>
                   )}

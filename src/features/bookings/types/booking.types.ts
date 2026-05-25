@@ -27,6 +27,12 @@ export interface BookingSummary {
   booking_date: string
 }
 
+// Extended summary with package info — returned by my_bookings list endpoint
+export interface Booking extends BookingSummary {
+  package_name?: string | null
+  package_image?: string | null
+}
+
 export interface BookingDetail extends BookingSummary {
   customer: number
   package: number | null

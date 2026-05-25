@@ -7,12 +7,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Zap, Search, Loader2, Clock, Users, Plus, Pencil, Trash2, X, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { activitiesApi } from '@/features/activities/api/activities.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { formatPrice, resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { ROUTES } from '@/lib/constants/routes'
 import type { Activity, ActivityType, DifficultyLevel } from '@/features/activities/types/activity.types'
 
 const PAGE_SIZE = 8
@@ -73,12 +75,12 @@ const DIFFICULTY_LEVELS: DifficultyLevel[] = ['easy', 'moderate', 'difficult']
 
 const schema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
-  destination: z.coerce.number({ invalid_type_error: 'Requerido' }).min(1, 'Selecciona un destino'),
+  destination: z.coerce.number().min(1, 'Selecciona un destino'),
   activity_type: z.enum(['sightseeing', 'adventure', 'cultural', 'shopping', 'dining', 'sports', 'wellness', 'entertainment'] as const),
   difficulty_level: z.enum(['easy', 'moderate', 'difficult'] as const),
   description: z.string().min(5, 'Mínimo 5 caracteres'),
-  duration_hours: z.coerce.number({ invalid_type_error: 'Requerido' }).min(0.5),
-  price_per_person: z.coerce.number({ invalid_type_error: 'Requerido' }).min(0),
+  duration_hours: z.coerce.number().min(0.5),
+  price_per_person: z.coerce.number().min(0),
   max_group_size: z.coerce.number().min(1),
   is_active: z.boolean(),
 })
@@ -132,7 +134,8 @@ function ActivityModal({ activity, onClose }: { activity: Activity | null; onClo
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: isEdit
       ? {
           name: activity.name,
@@ -307,11 +310,11 @@ export default function AdminActivitiesPage() {
           <h1 className="font-display text-3xl font-bold text-white">Actividades</h1>
           <p className="text-brand-silver text-sm mt-1">{total} actividades registradas</p>
         </div>
-        <button onClick={() => { setModalActivity(null); setModalOpen(true) }}
+        <Link href={ROUTES.admin.newActivity}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
           <Plus className="h-4 w-4" />
           Nueva actividad
-        </button>
+        </Link>
       </div>
 
       <div className="relative max-w-sm">
@@ -372,10 +375,10 @@ export default function AdminActivitiesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => { setModalActivity(act); setModalOpen(true) }}
+                        <Link href={ROUTES.admin.editActivity(act.id)}
                           className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                         {deletingId === act.id ? (
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => deleteMutation.mutate(act.id)} disabled={deleteMutation.isPending}

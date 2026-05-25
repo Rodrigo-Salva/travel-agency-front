@@ -90,6 +90,24 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
+
+            {/* Map */}
+            <div className="rounded-2xl overflow-hidden border border-brand-steel/10">
+              <iframe
+                title="Ubicación de oficina"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3900.8804!2d-77.0302!3d-12.1211!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105c8f2e8f1234%3A0xabc!2sAv.%20Larco%201301%2C%20Miraflores%2C%20Lima!5e0!3m2!1ses!2spe!4v1234567890"
+                width="100%"
+                height="200"
+                style={{ border: 0, display: 'block', filter: 'grayscale(0.8) invert(0.85) hue-rotate(180deg)' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <div className="px-4 py-3 bg-brand-dark flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-brand-rose flex-shrink-0" />
+                <span className="text-xs text-brand-silver/70">Av. Larco 1301, Miraflores · Lima, Perú</span>
+              </div>
+            </div>
           </div>
 
           {/* Form */}

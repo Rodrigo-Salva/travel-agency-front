@@ -28,11 +28,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  const stars = hotel.star_rating ? ` ${'★'.repeat(hotel.star_rating)}` : ''
+  const BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+  const rawImage = hotel.image ?? hotel.main_image
+  const imageUrl = rawImage
+    ? rawImage.startsWith('http') ? rawImage : `${BASE}${rawImage}`
+    : undefined
+
+  const stars = hotel.star_rating ? ` ${'★'.repeat(Number(hotel.star_rating))}` : ''
   const title = `${hotel.name}${stars} — TravelAgency`
-  const description = hotel.description
-    ? hotel.description.slice(0, 160)
-    : `Hotel${stars} en ${hotel.destination_name ?? 'destino selecto'}. Desde USD ${hotel.price_per_night} por noche.`
+  const description = (hotel.description ?? '')
+    .slice(0, 160) || `Hotel${stars} en ${hotel.address ?? 'destino selecto'}. Desde $${hotel.price_per_night} por noche.`
 
   return {
     title,
@@ -41,7 +46,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: 'website',
-      ...(hotel.main_image ? { images: [{ url: hotel.main_image }] } : {}),
+      ...(imageUrl ? { images: [{ url: imageUrl, width: 1200, height: 630, alt: hotel.name }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
     },
   }
 }

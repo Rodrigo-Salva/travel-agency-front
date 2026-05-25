@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Package, Plus, Search, Pencil, Trash2, Loader2, Star, Clock, X, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -55,6 +56,7 @@ import { packagesApi } from '@/features/packages/api/packages.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { formatPrice, resolveImage } from '@/lib/utils/format'
 import { queryKeys } from '@/lib/query/keys'
+import { ROUTES } from '@/lib/constants/routes'
 import type { PackageSummary } from '@/features/packages/types/package.types'
 
 const schema = z.object({
@@ -406,11 +408,11 @@ export default function AdminPackagesPage() {
           <h1 className="font-display text-3xl font-bold text-white">Paquetes</h1>
           <p className="text-brand-silver text-sm mt-1">{total} paquetes registrados</p>
         </div>
-        <button onClick={openNew}
+        <Link href={ROUTES.admin.newPackage}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors">
           <Plus className="h-4 w-4" />
           Nuevo paquete
-        </button>
+        </Link>
       </div>
 
       <div className="relative max-w-sm">
@@ -465,10 +467,10 @@ export default function AdminPackagesPage() {
                     <td className="px-4 py-3 font-semibold text-white whitespace-nowrap">{formatPrice(pkg.price_adult)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openEdit(pkg)}
+                        <Link href={ROUTES.admin.editPackage(pkg.id)}
                           className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                         {deletingId === pkg.id ? (
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => deleteMutation.mutate(pkg.id)} disabled={deleteMutation.isPending}

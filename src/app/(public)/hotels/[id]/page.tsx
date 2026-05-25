@@ -3,12 +3,14 @@
 import { use } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Star, Clock, Phone, Mail, Wifi, Users, ChevronRight, MessageSquare } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Clock, Phone, Mail, Wifi, Users, ChevronRight, MessageSquare, BedDouble, Coffee, Dumbbell, Car, Utensils, Waves, Wind, PocketKnife } from 'lucide-react'
 import { useHotel } from '@/features/hotels/hooks/useHotels'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { InlineReviewSection } from '@/features/reviews/components/InlineReviewSection'
+import { PackageGallery } from '@/components/packages/PackageGallery'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -61,24 +63,48 @@ export default function HotelDetailPage({ params }: Props) {
     ? hotel.amenities.split(',').map((a) => a.trim()).filter(Boolean)
     : []
 
+  // Mapa de íconos por keyword en el nombre de la amenidad
+  const AMENITY_ICONS: [RegExp, typeof Wifi][] = [
+    [/wifi|internet/i, Wifi],
+    [/gym|gimnasio|fitness/i, Dumbbell],
+    [/piscina|pool|swim/i, Waves],
+    [/estacionamiento|parking|garaje/i, Car],
+    [/restaurante|restaurant|bar|comida/i, Utensils],
+    [/desayuno|breakfast|café|cafe|coffee/i, Coffee],
+    [/aire|ac|clima|air/i, Wind],
+    [/habitaci|room|suite|cama/i, BedDouble],
+  ]
+
+  function getAmenityIcon(name: string) {
+    for (const [rx, Icon] of AMENITY_ICONS) {
+      if (rx.test(name)) return Icon
+    }
+    return PocketKnife
+  }
+
+  const galleryImages = [
+    ...(imageUrl ? [imageUrl] : []),
+    ...(hotel.images ?? []).map((img: { image: string }) => {
+      const src = img.image
+      return src.startsWith('http') ? src : `${BASE_URL}${src}`
+    }),
+  ]
+
   return (
     <div className="min-h-screen bg-brand-darkest">
-      {/* Hero */}
-      <div className="relative h-[400px] bg-brand-dark overflow-hidden">
-        {imageUrl ? (
-          <Image src={imageUrl} alt={hotel.name} fill className="object-cover" priority sizes="100vw" />
-        ) : (
-          <div className="absolute inset-0 bg-brand-dark" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/30 to-transparent" />
-
-        <div className="absolute top-6 left-0 right-0 container mx-auto px-4">
-          <Link href={ROUTES.hotels} className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg">
+      {/* Top nav */}
+      <div className="sticky top-0 z-20 bg-brand-darkest/90 backdrop-blur-md border-b border-brand-steel/10">
+        <div className="container mx-auto px-4 h-14 flex items-center">
+          <Link href={ROUTES.hotels} className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" /> Todos los hoteles
           </Link>
         </div>
+      </div>
 
-        <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
+      <div className="container mx-auto px-4 pt-8 pb-4">
+        <Breadcrumbs items={[{ label: 'Hoteles', href: ROUTES.hotels }, { label: hotel.name }]} />
+        {/* Title */}
+        <div className="mb-6">
           <StarRating rating={hotel.star_rating} />
           <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mt-2 mb-2">{hotel.name}</h1>
           <div className="flex items-center gap-2 text-brand-rose text-sm font-medium">
@@ -86,9 +112,16 @@ export default function HotelDetailPage({ params }: Props) {
             {hotel.destination.name}, {hotel.destination.country}
           </div>
         </div>
+
+        {/* Gallery */}
+        {galleryImages.length > 0 && (
+          <div className="mb-10">
+            <PackageGallery images={galleryImages} alt={hotel.name} />
+          </div>
+        )}
       </div>
 
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 py-4 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main */}
           <div className="lg:col-span-2 space-y-8">
@@ -103,12 +136,15 @@ export default function HotelDetailPage({ params }: Props) {
               <div>
                 <h2 className="font-display text-2xl font-bold text-white mb-4">Amenidades</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {amenitiesList.map((amenity) => (
-                    <div key={amenity} className="flex items-center gap-2 p-3 rounded-xl bg-brand-dark border border-brand-steel/10 text-sm text-brand-silver">
-                      <Wifi className="h-4 w-4 text-brand-wine flex-shrink-0" />
-                      {amenity}
-                    </div>
-                  ))}
+                  {amenitiesList.map((amenity) => {
+                    const AmenityIcon = getAmenityIcon(amenity)
+                    return (
+                      <div key={amenity} className="flex items-center gap-2 p-3 rounded-xl bg-brand-dark border border-brand-steel/10 text-sm text-brand-silver hover:border-brand-wine/20 transition-colors group">
+                        <AmenityIcon className="h-4 w-4 text-brand-rose flex-shrink-0 group-hover:scale-110 transition-transform" />
+                        {amenity}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}

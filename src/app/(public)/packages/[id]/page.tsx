@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -26,9 +27,17 @@ import {
 } from 'lucide-react'
 import { usePackage } from '@/features/packages/hooks/usePackages'
 import { ReviewList } from '@/features/reviews/components/ReviewList'
+import { PackageGallery } from '@/components/packages/PackageGallery'
+import { RelatedPackages } from '@/components/packages/RelatedPackages'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice, formatDate, formatDuration } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
+
+const DestinationMap = dynamic(
+  () => import('@/features/destinations/components/DestinationMap').then((m) => m.DestinationMap),
+  { ssr: false, loading: () => <div className="h-[380px] rounded-2xl bg-brand-dark animate-pulse" /> },
+)
 
 interface Props {
   params: Promise<{ id: string }>
@@ -153,64 +162,60 @@ export default function PackageDetailPage({ params }: Props) {
     )
   }
 
+  const galleryImages = [
+    ...(imageUrl ? [imageUrl] : []),
+    ...(pkg.images ?? []).map((img: { image: string }) => {
+      const src = img.image
+      return src.startsWith('http') ? src : `${BASE_URL}${src}`
+    }),
+  ]
+
   return (
     <div className="min-h-screen bg-brand-darkest">
-      {/* Hero */}
-      <div className="relative h-[440px] bg-brand-dark overflow-hidden">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={pkg.name}
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-wine/20 via-brand-dark to-brand-darkest" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/50 to-transparent" />
-
-        {/* Back + Share */}
-        <div className="absolute top-6 left-0 right-0 container mx-auto px-4 flex items-center justify-between">
-          <Link
-            href={ROUTES.packages}
-            className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Todos los paquetes
+      {/* Top nav bar */}
+      <div className="sticky top-0 z-20 bg-brand-darkest/90 backdrop-blur-md border-b border-brand-steel/10">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href={ROUTES.packages} className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Todos los paquetes
           </Link>
-          <button
-            onClick={handleShare}
-            className="inline-flex items-center gap-2 text-sm text-brand-silver hover:text-white transition-colors bg-brand-darkest/60 backdrop-blur-sm px-3 py-2 rounded-lg"
-          >
-            {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}
-            {copied ? 'Copiado!' : 'Compartir'}
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {pkg.is_featured && (
-              <Badge className="bg-brand-wine/90 border-0 text-white flex items-center gap-1">
-                <Star className="h-3 w-3 fill-current" />
-                Destacado
+          <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {pkg.is_featured && (
+                <Badge className="bg-brand-wine/90 border-0 text-white flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" /> Destacado
+                </Badge>
+              )}
+              <Badge variant="secondary" className="bg-brand-dark border-brand-steel/20 text-brand-silver">
+                {pkg.category.name}
               </Badge>
-            )}
-            <Badge variant="secondary" className="bg-brand-darkest/80 border-brand-steel/20 text-brand-silver">
-              {pkg.category.name}
-            </Badge>
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">{pkg.name}</h1>
-          <div className="flex items-center gap-2 text-brand-rose text-sm font-medium">
-            <MapPin className="h-4 w-4" />
-            {pkg.destination}
+            </div>
+            <button onClick={handleShare} className="inline-flex items-center gap-1.5 text-sm text-brand-silver hover:text-white transition-colors bg-brand-dark px-3 py-1.5 rounded-lg border border-brand-steel/20">
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5" />}
+              {copied ? 'Copiado' : 'Compartir'}
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-4 pt-8 pb-4">
+        <Breadcrumbs items={[{ label: 'Paquetes', href: ROUTES.packages }, { label: pkg.name }]} />
+        {/* Title */}
+        <div className="mb-6">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">{pkg.name}</h1>
+          <div className="flex items-center gap-2 text-brand-rose text-sm font-medium">
+            <MapPin className="h-4 w-4" /> {pkg.destination}
+          </div>
+        </div>
+
+        {/* Gallery */}
+        {galleryImages.length > 0 && (
+          <div className="mb-10">
+            <PackageGallery images={galleryImages} alt={pkg.name} />
+          </div>
+        )}
+      </div>
+
+      <div className="container mx-auto px-4 py-4 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-10">
@@ -272,6 +277,22 @@ export default function PackageDetailPage({ params }: Props) {
                       <ItineraryDayCard key={day.id} day={day} />
                     ))}
                 </div>
+              </div>
+            )}
+
+            {/* Destination map */}
+            {pkg.destination_latitude && pkg.destination_longitude && (
+              <div>
+                <h2 className="font-display text-2xl font-bold text-white mb-5 flex items-center gap-2">
+                  <MapPin className="h-6 w-6 text-brand-wine" />
+                  Ubicación del destino
+                </h2>
+                <DestinationMap
+                  name={pkg.destination}
+                  country={pkg.destination_country ?? ''}
+                  latitude={Number(pkg.destination_latitude)}
+                  longitude={Number(pkg.destination_longitude)}
+                />
               </div>
             )}
 
@@ -345,6 +366,9 @@ export default function PackageDetailPage({ params }: Props) {
             </div>
           </aside>
         </div>
+
+        {/* Related packages */}
+        <RelatedPackages currentId={pkg.id} destinationName={pkg.destination} />
       </div>
     </div>
   )
