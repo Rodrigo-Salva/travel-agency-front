@@ -38,6 +38,10 @@ export interface PackageDetail {
   slug: string
   category: Category
   destination: string
+  destination_id?: number | null
+  destination_country?: string | null
+  destination_latitude?: number | null
+  destination_longitude?: number | null
   description: string
   short_description: string
   duration_days: number
@@ -55,6 +59,7 @@ export interface PackageDetail {
   discount_percentage?: string | null
   discounted_price_adult?: string | null
   image: string | null
+  images?: { image: string }[]
   is_active: boolean
   is_featured: boolean
   available_from: string
