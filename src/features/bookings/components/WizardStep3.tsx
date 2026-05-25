@@ -1,28 +1,68 @@
 'use client'
 
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  Users,
-  CalendarDays,
-  FileText,
-  Loader2,
-  MapPin,
-  Plane,
+  ArrowLeft, CheckCircle2, Clock, Users, CalendarDays, FileText,
+  Loader2, MapPin, Plane, Tag, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { queryKeys } from '@/lib/query/keys'
 import { useWizardStore } from '../store/wizard.store'
 import { bookingsApi } from '../api/bookings.api'
-import { formatPrice, formatDate, formatDuration } from '@/lib/utils/format'
+import { apiClient } from '@/lib/api/client'
+import { API } from '@/lib/api/endpoints'
+import { formatPrice, formatDate } from '@/lib/utils/format'
+import { ROUTES } from '@/lib/constants/routes'
 
 const PASSENGER_LABELS = { adult: 'Adulto', child: 'Niño', infant: 'Infante' }
 
+interface CouponResult {
+  coupon_id: number
+  discount_type: string
+  discount_value: string
+  discount_amount: string
+  final_amount: string
+  mensaje: string
+}
+
 export function WizardStep3() {
   const { state, setSpecialRequests, prevStep, nextStep, setCompletedBooking } = useWizardStore()
+  const qc = useQueryClient()
   const [requests, setRequests] = useState(state.specialRequests)
+  const [couponCode, setCouponCode] = useState('')
+  const [coupon, setCoupon] = useState<CouponResult | null>(null)
+
+  const total = state.total
+  const discount = coupon ? parseFloat(coupon.discount_amount) : 0
+  const finalTotal = total - discount
+
+  const validateCoupon = useMutation({
+    mutationFn: async () => {
+      const { data } = await apiClient.post(API.validateCoupon, {
+        code: couponCode.trim().toUpperCase(),
+        amount: total,
+      })
+      return data as CouponResult & { exito: boolean; mensaje: string }
+    },
+    onSuccess: (data) => {
+      if (data.exito) {
+        setCoupon(data)
+        toast.success(data.mensaje)
+      } else {
+        toast.error(data.mensaje)
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.mensaje ?? 'Cupón no válido')
+    },
+  })
+
+  const removeCoupon = () => {
+    setCoupon(null)
+    setCouponCode('')
+  }
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -35,25 +75,28 @@ export function WizardStep3() {
         num_infants: state.numInfants,
         special_requests: requests || undefined,
         passengers: state.passengers,
+        ...(coupon ? { coupon_id: coupon.coupon_id } : {}),
       }),
     onSuccess: (data) => {
       if (data.exito) {
         setSpecialRequests(requests)
         setCompletedBooking(data.numero_reserva)
+        qc.invalidateQueries({ queryKey: queryKeys.bookings.all })
         nextStep()
       } else {
         toast.error('No se pudo crear la reserva')
       }
     },
-    onError: () => {
-      toast.error('Error al conectar con el servidor. Intenta nuevamente.')
+    onError: (err: any) => {
+      const errores = err?.response?.data?.errores
+      if (errores) {
+        const msg = Object.entries(errores).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ')
+        toast.error(msg)
+      } else {
+        toast.error(err?.response?.data?.mensaje ?? 'Error al conectar con el servidor. Intenta nuevamente.')
+      }
     },
   })
-
-  const handleConfirm = () => {
-    if (!state.packageId) return
-    mutation.mutate()
-  }
 
   return (
     <div className="space-y-6">
@@ -108,7 +151,7 @@ export function WizardStep3() {
         </div>
       </div>
 
-      {/* Passengers list */}
+      {/* Passengers */}
       {state.passengers.length > 0 && (
         <div className="rounded-xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
           <div className="px-5 py-3 border-b border-brand-steel/10">
@@ -139,9 +182,47 @@ export function WizardStep3() {
           value={requests}
           onChange={(e) => setRequests(e.target.value)}
           rows={3}
-          placeholder="Habitacion en piso alto, dieta vegetariana, celebracion de cumpleanos..."
+          placeholder="Habitacion en piso alto, dieta vegetariana..."
           className="w-full bg-brand-dark border border-brand-steel/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-brand-steel/50 focus:outline-none focus:border-brand-wine resize-none"
         />
+      </div>
+
+      {/* Coupon */}
+      <div className="space-y-2">
+        <label className="text-sm text-brand-silver flex items-center gap-1.5">
+          <Tag className="h-3.5 w-3.5" /> Código de cupón (opcional)
+        </label>
+        <Link href={ROUTES.promotions} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-wine hover:underline">
+          Ver cupones disponibles ↗
+        </Link>
+        {coupon ? (
+          <div className="flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3">
+            <div>
+              <p className="text-emerald-400 font-semibold text-sm">{couponCode.toUpperCase()}</p>
+              <p className="text-xs text-brand-silver">{coupon.mensaje} — ahorro: {formatPrice(coupon.discount_amount)}</p>
+            </div>
+            <button onClick={removeCoupon} className="text-brand-steel hover:text-red-400 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && couponCode && validateCoupon.mutate()}
+              placeholder="Ej: VIAJE10"
+              className="flex-1 bg-brand-dark border border-brand-steel/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-brand-steel/50 focus:outline-none focus:border-brand-wine font-mono uppercase"
+            />
+            <button
+              onClick={() => couponCode && validateCoupon.mutate()}
+              disabled={!couponCode || validateCoupon.isPending}
+              className="px-4 py-2.5 rounded-xl bg-brand-wine/20 border border-brand-wine/30 text-brand-rose text-sm font-medium hover:bg-brand-wine hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {validateCoupon.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Price breakdown */}
@@ -163,9 +244,15 @@ export function WizardStep3() {
             <span className="text-emerald-400">Gratis</span>
           </div>
         )}
+        {coupon && (
+          <div className="flex items-center justify-between text-sm text-emerald-400">
+            <span>Descuento (cupón {couponCode})</span>
+            <span>− {formatPrice(coupon.discount_amount)}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between pt-3 border-t border-brand-steel/10">
           <span className="font-semibold text-white">Total</span>
-          <span className="font-display text-xl font-bold text-white">{formatPrice(state.total)}</span>
+          <span className="font-display text-xl font-bold text-white">{formatPrice(finalTotal)}</span>
         </div>
       </div>
 
@@ -182,20 +269,14 @@ export function WizardStep3() {
         </button>
         <button
           type="button"
-          onClick={handleConfirm}
+          onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
           className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-wine text-white font-semibold hover:bg-brand-wine/90 transition-colors disabled:opacity-60"
         >
           {mutation.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Confirmando...
-            </>
+            <><Loader2 className="h-4 w-4 animate-spin" />Confirmando...</>
           ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Confirmar reserva
-            </>
+            <><CheckCircle2 className="h-4 w-4" />Confirmar reserva</>
           )}
         </button>
       </div>

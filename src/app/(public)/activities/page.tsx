@@ -5,7 +5,7 @@ import { useActivities } from '@/features/activities/hooks/useActivities'
 import { ActivityCard, ActivityCardSkeleton } from '@/features/activities/components/ActivityCard'
 import { Input } from '@/components/ui/input'
 import type { ActivityFilters, ActivityType, DifficultyLevel } from '@/features/activities/types/activity.types'
-import { Search, Zap, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Zap, X, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react'
 
 const TYPES: { label: string; value: ActivityType }[] = [
   { label: 'Turismo', value: 'sightseeing' },
@@ -26,6 +26,7 @@ const DIFFICULTIES: { label: string; value: DifficultyLevel }[] = [
 
 export default function ActivitiesPage() {
   const [filters, setFilters] = useState<ActivityFilters>({ page: 1, page_size: 12 })
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const { data, isLoading } = useActivities(filters)
 
   const totalPages = data ? Math.ceil(data.count / (filters.page_size ?? 12)) : 0
@@ -35,14 +36,16 @@ export default function ActivitiesPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
-            <Zap className="h-4 w-4" />
+      <div className="relative overflow-hidden bg-brand-dark border-b border-brand-steel/15 pt-16 pb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-600/30 to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex items-center gap-2 text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
+            <Zap className="h-3.5 w-3.5" />
             Experiencias únicas
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-4">Actividades</h1>
-          <p className="text-brand-silver max-w-2xl text-lg">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Actividades</h1>
+          <p className="text-brand-silver/80 max-w-xl">
             Desde aventuras extremas hasta experiencias culturales. Encuentra la actividad perfecta para tu viaje.
           </p>
         </div>
@@ -103,24 +106,42 @@ export default function ActivitiesPage() {
         </div>
 
         {!isLoading && data && (
-          <p className="text-sm text-brand-steel mb-6">
-            {data.count} actividad{data.count !== 1 ? 'es' : ''} encontrada{data.count !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-brand-steel">
+              {data.count} actividad{data.count !== 1 ? 'es' : ''} encontrada{data.count !== 1 ? 's' : ''}
+            </p>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-brand-dark border border-brand-steel/10">
+              <button onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-brand-wine text-white' : 'text-brand-steel hover:text-white'}`}>
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <ActivityCardSkeleton key={i} />)
-            : data?.activities.length === 0
-            ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <Zap className="h-12 w-12 text-brand-steel/40 mb-4" />
-                <p className="text-brand-silver text-lg font-medium">No se encontraron actividades</p>
-                <p className="text-brand-steel text-sm mt-2">Intenta con otros filtros</p>
-              </div>
-            )
-            : data?.activities.map((act) => <ActivityCard key={act.id} activity={act} />)}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 12 }).map((_, i) => <ActivityCardSkeleton key={i} />)}
+          </div>
+        ) : data?.activities.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Zap className="h-12 w-12 text-brand-steel/40 mb-4" />
+            <p className="text-brand-silver text-lg font-medium">No se encontraron actividades</p>
+            <p className="text-brand-steel text-sm mt-2">Intenta con otros filtros</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {data?.activities.map((act) => <ActivityCard key={act.id} activity={act} />)}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {data?.activities.map((act) => <ActivityCard key={act.id} activity={act} listMode />)}
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-12">
