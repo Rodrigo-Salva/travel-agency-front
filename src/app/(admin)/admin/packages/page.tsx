@@ -78,6 +78,7 @@ const schema = z.object({
   includes_guide: z.boolean(),
   is_featured: z.boolean(),
   discount_percentage: z.number().min(0).max(100).optional(),
+  capacity: z.number().min(1).optional(),
   available_from: z.string().optional(),
   available_until: z.string().optional(),
 })
@@ -321,6 +322,14 @@ function PackageModal({
                     placeholder="0"
                     className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
                 </div>
+                <div className="space-y-1.5">
+                  <Label className="text-brand-silver text-xs flex items-center gap-1.5">
+                    Capacidad (cupos) <span className="text-brand-steel font-normal">— vacío = ilimitado</span>
+                  </Label>
+                  <Input type="number" min={1} {...register('capacity', { valueAsNumber: true })}
+                    placeholder="∞"
+                    className="bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine" />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-brand-silver text-xs">Disponible desde</Label>
@@ -435,7 +444,7 @@ export default function AdminPackagesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-brand-steel/10">
-                  {['Imagen', 'Paquete', 'Destino', 'Categoría', 'Duración', 'Precio', 'Acciones'].map((h) => (
+                  {['Imagen', 'Paquete', 'Destino', 'Categoría', 'Duración', 'Precio', 'Cupos', 'Acciones'].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-brand-steel uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -465,6 +474,21 @@ export default function AdminPackagesPage() {
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{pkg.duration_days}d/{pkg.duration_nights}n</span>
                     </td>
                     <td className="px-4 py-3 font-semibold text-white whitespace-nowrap">{formatPrice(pkg.price_adult)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {pkg.capacity != null ? (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          pkg.is_sold_out
+                            ? 'bg-red-500/20 text-red-400'
+                            : (pkg.available_spots ?? 99) <= 5
+                            ? 'bg-amber-500/20 text-amber-400'
+                            : 'bg-emerald-500/10 text-emerald-400'
+                        }`}>
+                          {pkg.is_sold_out ? 'Agotado' : `${pkg.available_spots ?? '?'}/${pkg.capacity}`}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-brand-steel/50">∞</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Link href={ROUTES.admin.editPackage(pkg.id)}

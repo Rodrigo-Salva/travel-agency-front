@@ -27,6 +27,10 @@ export interface PackageSummary {
   price_child: string
   discount_percentage?: string | null
   discounted_price_adult?: string | null
+  capacity?: number | null
+  booked_count?: number
+  available_spots?: number | null
+  is_sold_out?: boolean
   image: string | null
   is_featured: boolean
   created_at: string
@@ -58,6 +62,10 @@ export interface PackageDetail {
   includes_guide: boolean
   discount_percentage?: string | null
   discounted_price_adult?: string | null
+  capacity?: number | null
+  booked_count?: number
+  available_spots?: number | null
+  is_sold_out?: boolean
   image: string | null
   images?: { image: string }[]
   is_active: boolean

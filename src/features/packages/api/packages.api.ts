@@ -68,4 +68,41 @@ export const packagesApi = {
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(API.package(id))
   },
+
+  // ── Itinerary CRUD ─────────────────────────────────────────────────────────
+  getItinerary: async (packageId: number | string) => {
+    const { data } = await apiClient.get(API.itinerary(packageId))
+    return data.itinerario as ItineraryDay[]
+  },
+
+  createItineraryDay: async (packageId: number | string, payload: ItineraryDayPayload) => {
+    const { data } = await apiClient.post(API.itinerary(packageId), payload)
+    return data.dia as ItineraryDay
+  },
+
+  updateItineraryDay: async (packageId: number | string, dayId: number, payload: Partial<ItineraryDayPayload>) => {
+    const { data } = await apiClient.patch(API.itineraryDay(packageId, dayId), payload)
+    return data.dia as ItineraryDay
+  },
+
+  deleteItineraryDay: async (packageId: number | string, dayId: number): Promise<void> => {
+    await apiClient.delete(API.itineraryDay(packageId, dayId))
+  },
+}
+
+export interface ItineraryDay {
+  id: number
+  day_number: number
+  title: string
+  description: string
+  activities: string[]
+  meals_included: string[]
+}
+
+export interface ItineraryDayPayload {
+  day_number: number
+  title: string
+  description: string
+  activities: string[]
+  meals_included: string[]
 }

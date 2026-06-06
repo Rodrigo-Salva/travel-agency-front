@@ -6,12 +6,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Save, Loader2, ImageIcon, Package } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, ImageIcon, Package, Plus, Pencil, Trash2, CalendarDays, X, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { packagesApi } from '@/features/packages/api/packages.api'
+import { packagesApi, type ItineraryDay } from '@/features/packages/api/packages.api'
 import { destinationsApi } from '@/features/destinations/api/destinations.api'
 import { resolveImage } from '@/lib/utils/format'
 import { ROUTES } from '@/lib/constants/routes'
@@ -36,6 +36,7 @@ const schema = z.object({
   includes_guide: z.boolean(),
   is_featured: z.boolean(),
   discount_percentage: z.coerce.number().min(0).max(100).optional(),
+  capacity: z.coerce.number().min(1).optional(),
   available_from: z.string().optional(),
   available_until: z.string().optional(),
 })
@@ -49,6 +50,244 @@ const CHECKBOXES = [
   { key: 'includes_guide', label: 'Guía' },
   { key: 'is_featured', label: 'Destacado' },
 ] as const
+
+// ─── Itinerary editor ────────────────────────────────────────────────────────
+
+interface DayFormState {
+  day_number: number
+  title: string
+  description: string
+  activitiesRaw: string   // comma-separated
+  mealsRaw: string        // comma-separated
+}
+
+function ItineraryEditor({ packageId }: { packageId: string }) {
+  const qc = useQueryClient()
+  const qKey = ['itinerary', packageId]
+
+  const { data: days = [], isLoading } = useQuery({
+    queryKey: qKey,
+    queryFn: () => packagesApi.getItinerary(packageId),
+  })
+
+  const [editing, setEditing] = useState<number | 'new' | null>(null)
+  const emptyForm = (): DayFormState => ({
+    day_number: (days.length ?? 0) + 1,
+    title: '',
+    description: '',
+    activitiesRaw: '',
+    mealsRaw: '',
+  })
+  const [form, setForm] = useState<DayFormState>(emptyForm)
+
+  function openNew() {
+    setForm({ ...emptyForm(), day_number: days.length + 1 })
+    setEditing('new')
+  }
+
+  function openEdit(day: ItineraryDay) {
+    setForm({
+      day_number: day.day_number,
+      title: day.title,
+      description: day.description,
+      activitiesRaw: day.activities.join(', '),
+      mealsRaw: day.meals_included.join(', '),
+    })
+    setEditing(day.id)
+  }
+
+  function parseList(raw: string): string[] {
+    return raw.split(',').map(s => s.trim()).filter(Boolean)
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        day_number: form.day_number,
+        title: form.title,
+        description: form.description,
+        activities: parseList(form.activitiesRaw),
+        meals_included: parseList(form.mealsRaw),
+      }
+      if (editing === 'new') {
+        return packagesApi.createItineraryDay(packageId, payload)
+      } else {
+        return packagesApi.updateItineraryDay(packageId, editing as number, payload)
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing === 'new' ? 'Día agregado' : 'Día actualizado')
+      qc.invalidateQueries({ queryKey: qKey })
+      setEditing(null)
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { errores?: Record<string, string[]> } } })?.response?.data?.errores
+      toast.error(msg ? JSON.stringify(msg) : 'Error al guardar el día')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (dayId: number) => packagesApi.deleteItineraryDay(packageId, dayId),
+    onSuccess: () => {
+      toast.success('Día eliminado')
+      qc.invalidateQueries({ queryKey: qKey })
+    },
+    onError: () => toast.error('Error al eliminar'),
+  })
+
+  const fc = 'w-full rounded-xl px-3 py-2 text-sm border bg-brand-darkest border-brand-steel/20 text-white focus:border-brand-wine focus:outline-none'
+
+  return (
+    <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-brand-steel text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5">
+          <CalendarDays className="h-3.5 w-3.5" /> Itinerario ({days.length} días)
+        </p>
+        {editing === null && (
+          <button
+            type="button"
+            onClick={openNew}
+            className="flex items-center gap-1.5 text-xs font-medium text-brand-rose hover:text-white border border-brand-wine/30 px-3 py-1.5 rounded-lg hover:bg-brand-wine/20 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" /> Agregar día
+          </button>
+        )}
+      </div>
+
+      {isLoading && (
+        <div className="h-10 rounded-xl bg-brand-darkest/60 animate-pulse" />
+      )}
+
+      {/* Day cards */}
+      {!isLoading && days.length === 0 && editing === null && (
+        <p className="text-brand-steel text-sm text-center py-4">Sin días en el itinerario. Agrega el primer día.</p>
+      )}
+
+      <div className="space-y-2">
+        {days.sort((a, b) => a.day_number - b.day_number).map(day => (
+          <div key={day.id}>
+            {editing === day.id ? (
+              /* Edit form inline */
+              <DayForm
+                form={form}
+                setForm={setForm}
+                onSave={() => saveMutation.mutate()}
+                onCancel={() => setEditing(null)}
+                isPending={saveMutation.isPending}
+                fc={fc}
+              />
+            ) : (
+              <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-brand-darkest/50 border border-brand-steel/10 group">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-7 h-7 rounded-full bg-brand-wine/15 border border-brand-wine/25 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[11px] font-bold text-brand-rose">{day.day_number}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{day.title}</p>
+                    <p className="text-brand-steel text-xs truncate">{day.description.slice(0, 80)}{day.description.length > 80 ? '…' : ''}</p>
+                    {day.activities.length > 0 && (
+                      <p className="text-brand-steel/60 text-[11px] mt-0.5">{day.activities.length} actividad{day.activities.length !== 1 ? 'es' : ''}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => openEdit(day)}
+                    className="p-1.5 rounded-lg text-brand-silver hover:text-white hover:bg-brand-steel/20 transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteMutation.mutate(day.id)}
+                    disabled={deleteMutation.isPending}
+                    className="p-1.5 rounded-lg text-brand-silver hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* New day form */}
+      {editing === 'new' && (
+        <DayForm
+          form={form}
+          setForm={setForm}
+          onSave={() => saveMutation.mutate()}
+          onCancel={() => setEditing(null)}
+          isPending={saveMutation.isPending}
+          fc={fc}
+          isNew
+        />
+      )}
+    </div>
+  )
+}
+
+function DayForm({
+  form, setForm, onSave, onCancel, isPending, fc, isNew = false,
+}: {
+  form: DayFormState
+  setForm: (f: DayFormState) => void
+  onSave: () => void
+  onCancel: () => void
+  isPending: boolean
+  fc: string
+  isNew?: boolean
+}) {
+  return (
+    <div className="rounded-xl border border-brand-wine/30 bg-brand-darkest/60 p-4 space-y-3">
+      <p className="text-xs font-semibold text-brand-rose uppercase tracking-wider">
+        {isNew ? 'Nuevo día' : `Editando día ${form.day_number}`}
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="text-brand-silver text-xs">Número de día</label>
+          <input type="number" min={1} className={fc} value={form.day_number}
+            onChange={e => setForm({ ...form, day_number: Number(e.target.value) })} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-brand-silver text-xs">Título</label>
+          <input type="text" className={fc} placeholder="Ej: Llegada a Cusco"
+            value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <label className="text-brand-silver text-xs">Descripción</label>
+        <textarea rows={3} className={`${fc} resize-none`} placeholder="Descripción del día..."
+          value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+      </div>
+      <div className="space-y-1">
+        <label className="text-brand-silver text-xs">Actividades (separadas por coma)</label>
+        <input type="text" className={fc} placeholder="Visita al Machu Picchu, Tour en tren, ..."
+          value={form.activitiesRaw} onChange={e => setForm({ ...form, activitiesRaw: e.target.value })} />
+      </div>
+      <div className="space-y-1">
+        <label className="text-brand-silver text-xs">Comidas incluidas (separadas por coma)</label>
+        <input type="text" className={fc} placeholder="Desayuno, Almuerzo, ..."
+          value={form.mealsRaw} onChange={e => setForm({ ...form, mealsRaw: e.target.value })} />
+      </div>
+      <div className="flex items-center gap-2 justify-end">
+        <button type="button" onClick={onCancel}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-steel/20 text-brand-silver text-xs hover:text-white transition-colors">
+          <X className="h-3.5 w-3.5" /> Cancelar
+        </button>
+        <button type="button" onClick={onSave} disabled={isPending}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-wine text-white text-xs font-semibold hover:bg-brand-wine/90 transition-colors disabled:opacity-50">
+          {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+          Guardar día
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -97,6 +336,7 @@ export default function EditPackagePage({ params }: Props) {
       includes_guide: pkg.includes_guide,
       is_featured: pkg.is_featured,
       discount_percentage: pkg.discount_percentage ? parseFloat(String(pkg.discount_percentage)) : undefined,
+      capacity: pkg.capacity ?? undefined,
       available_from: pkg.available_from?.slice(0, 10) ?? '',
       available_until: pkg.available_until?.slice(0, 10) ?? '',
     } : undefined,
@@ -211,6 +451,10 @@ export default function EditPackagePage({ params }: Props) {
               <div className="space-y-1.5"><Label className="text-brand-silver text-xs">Mín. personas</Label><Input type="number" {...register('min_people')} className={fc} /></div>
               <div className="space-y-1.5"><Label className="text-brand-silver text-xs">Máx. personas</Label><Input type="number" {...register('max_people')} className={fc} /></div>
               <div className="space-y-1.5"><Label className="text-brand-silver text-xs">Descuento %</Label><Input type="number" {...register('discount_percentage')} className={fc} /></div>
+              <div className="space-y-1.5">
+                <Label className="text-brand-silver text-xs">Cupos (vacío = ∞)</Label>
+                <Input type="number" min={1} placeholder="Ilimitado" {...register('capacity')} className={fc} />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5"><Label className="text-brand-silver text-xs">Disponible desde</Label><Input type="date" {...register('available_from')} className={fc} /></div>
@@ -240,6 +484,11 @@ export default function EditPackagePage({ params }: Props) {
             </button>
           </div>
         </form>
+
+        {/* Itinerario — fuera del form para no interferir con el submit */}
+        <div className="mt-6">
+          <ItineraryEditor packageId={id} />
+        </div>
       </div>
     </div>
   )

@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Menu, X, Globe, Plane, Hotel, Activity, MapPin, ChevronDown,
   User, BookOpen, Heart, Star, LogOut, Bell, CheckCheck,
-  CreditCard, Calendar, MessageSquare,
+  CreditCard, Calendar, MessageSquare, Flame,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,7 +26,9 @@ const NAV_LINKS = [
   { label: 'Paquetes',    href: ROUTES.packages,     icon: Globe },
   { label: 'Hoteles',     href: ROUTES.hotels,        icon: Hotel },
   { label: 'Actividades', href: ROUTES.activities,    icon: Activity },
+  { label: 'Ofertas',     href: ROUTES.ofertas,       icon: Flame, highlight: true },
   { label: 'Nosotros',    href: ROUTES.about,         icon: Star },
+  { label: 'Cotizar',     href: ROUTES.cotizar,       icon: Star, highlight: true },
 ]
 
 const NOTIF_ICONS: Record<string, typeof Bell> = {
@@ -157,7 +159,11 @@ export function Navbar() {
         <nav className="hidden md:flex items-center gap-0.5">
           {NAV_LINKS.map(link => (
             <Link key={link.href} href={link.href}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-brand-silver hover:text-white hover:bg-brand-dark/80 border border-transparent hover:border-brand-steel/20 transition-all">
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium border transition-all ${
+                (link as { highlight?: boolean }).highlight
+                  ? 'text-brand-rose border-brand-wine/25 bg-brand-wine/8 hover:bg-brand-wine/20 hover:text-white'
+                  : 'text-brand-silver hover:text-white hover:bg-brand-dark/80 border-transparent hover:border-brand-steel/20'
+              }`}>
               {link.label}
             </Link>
           ))}

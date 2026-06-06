@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -50,7 +50,7 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
   )
 }
 
-export default function NewReviewPage() {
+function NewReviewContent() {
   const router = useRouter()
   const params = useSearchParams()
   const bookingId = params.get('booking') ? Number(params.get('booking')) : undefined
@@ -200,5 +200,13 @@ export default function NewReviewPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function NewReviewPage() {
+  return (
+    <Suspense>
+      <NewReviewContent />
+    </Suspense>
   )
 }
