@@ -639,7 +639,7 @@ export default function BookingDetailPage() {
           bookingId={booking.id}
           totalAmount={booking.total_amount}
           onClose={() => setShowPaymentModal(false)}
-          onSuccess={() => setShowPaymentModal(false)}
+          onSuccess={() => router.push(`/bookings/${booking.id}/confirmation`)}
         />
       )}
     </div>

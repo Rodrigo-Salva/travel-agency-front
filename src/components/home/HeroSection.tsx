@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { Search, MapPin, Users, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { HeroSearch } from '@/components/home/HeroSearch'
 import { ROUTES } from '@/lib/constants/routes'
 
 const SLIDES = [
@@ -13,27 +13,13 @@ const SLIDES = [
   { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80', tag: 'Cultura',    title: 'Explora culturas',  sub: 'del mundo' },
 ]
 
-const TABS = ['Paquetes', 'Destinos', 'Hoteles'] as const
-type Tab = typeof TABS[number]
-
 export function HeroSection() {
-  const router = useRouter()
   const [slide, setSlide] = useState(0)
-  const [tab, setTab] = useState<Tab>('Paquetes')
-  const [query, setQuery] = useState('')
-  const [travelers, setTravelers] = useState(2)
 
   useEffect(() => {
     const t = setInterval(() => setSlide(s => (s + 1) % SLIDES.length), 6000)
     return () => clearInterval(t)
   }, [])
-
-  function handleSearch() {
-    const params = new URLSearchParams()
-    if (query.trim()) params.set('search', query.trim())
-    const routes: Record<Tab, string> = { Paquetes: ROUTES.packages, Destinos: ROUTES.destinations, Hoteles: ROUTES.hotels }
-    router.push(`${routes[tab]}?${params.toString()}`)
-  }
 
   const current = SLIDES[slide]
 
@@ -65,44 +51,7 @@ export function HeroSection() {
           </p>
 
           {/* Search card */}
-          <div className="w-full max-w-2xl rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
-            <div className="flex border-b border-white/10">
-              {TABS.map(t => (
-                <button key={t} onClick={() => setTab(t)}
-                  className={`flex-1 py-3 text-sm font-semibold transition-all ${
-                    tab === t ? 'text-white border-b-2 border-brand-rose bg-white/5' : 'text-white/40 hover:text-white/70'
-                  }`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-3 flex flex-col sm:flex-row gap-2">
-              <div className="flex items-center gap-3 flex-1 rounded-xl bg-white/8 border border-white/10 focus-within:border-white/25 transition-colors px-4 py-3">
-                <MapPin className="h-4 w-4 text-brand-rose flex-shrink-0" />
-                <input value={query} onChange={e => setQuery(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                  placeholder="¿A dónde quieres ir?"
-                  className="w-full bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none" />
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl bg-white/8 border border-white/10 px-4 py-3 min-w-[130px]">
-                <Users className="h-4 w-4 text-brand-rose flex-shrink-0" />
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setTravelers(Math.max(1, travelers - 1))}
-                    className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center leading-none">−</button>
-                  <span className="text-sm text-white font-medium w-5 text-center">{travelers}</span>
-                  <button onClick={() => setTravelers(Math.min(20, travelers + 1))}
-                    className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-colors flex items-center justify-center leading-none">+</button>
-                </div>
-              </div>
-
-              <button onClick={handleSearch}
-                className="flex items-center justify-center gap-2 bg-brand-wine hover:bg-brand-wine/85 text-white px-6 py-3 font-bold rounded-xl transition-all text-sm whitespace-nowrap">
-                <Search className="h-4 w-4" /> Buscar
-              </button>
-            </div>
-          </div>
+          <HeroSearch />
 
           <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
             <span className="text-white/30 text-xs">Popular:</span>
@@ -128,24 +77,6 @@ export function HeroSection() {
         </div>
       </section>
 
-      {/* Stats bar */}
-      <div className="bg-brand-darkest border-t border-brand-steel/20">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-brand-steel/15">
-            {[
-              { value: '500+', label: 'Destinos' },
-              { value: '10K+', label: 'Viajeros felices' },
-              { value: '4.9★', label: 'Calificación' },
-              { value: '15+',  label: 'Años de experiencia' },
-            ].map(stat => (
-              <div key={stat.label} className="py-6 px-6 text-center">
-                <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-brand-silver/60 mt-1 uppercase tracking-wider">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { MessageSquare, Search, Loader2, Mail, Phone, Send, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MessageSquare, Search, Loader2, Mail, Phone, Send, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -194,15 +194,17 @@ export default function AdminInquiriesPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [typeFilter, setTypeFilter] = useState<'inquiry' | 'quote' | ''>('')
   const [selected, setSelected] = useState<Inquiry | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery<{ inquiries: Inquiry[]; count: number }>({
-    queryKey: [...queryKeys.inquiries.all, 'admin', page, search, statusFilter],
+    queryKey: [...queryKeys.inquiries.all, 'admin', page, search, statusFilter, typeFilter],
     queryFn: async () => {
       const params: Record<string, string | number> = { page, page_size: PAGE_SIZE }
       if (search) params.search = search
       if (statusFilter) params.status = statusFilter
+      if (typeFilter) params.inquiry_type = typeFilter
       const { data } = await apiClient.get(API.inquiries, { params })
       if ('results' in data) {
         return { count: data.count ?? 0, inquiries: data.results?.consultas ?? data.results ?? [] }
@@ -240,8 +242,29 @@ export default function AdminInquiriesPage() {
 
       <div>
         <p className="text-brand-wine text-xs font-semibold uppercase tracking-widest mb-1">Administración</p>
-        <h1 className="font-display text-3xl font-bold text-white">Consultas</h1>
-        <p className="text-brand-silver text-sm mt-1">{total} consultas recibidas</p>
+        <h1 className="font-display text-3xl font-bold text-white">Consultas y Cotizaciones</h1>
+        <p className="text-brand-silver text-sm mt-1">{total} mensajes recibidos</p>
+      </div>
+
+      {/* Tabs tipo */}
+      <div className="flex gap-2">
+        {([
+          { key: '',        label: 'Todo',           icon: MessageSquare },
+          { key: 'inquiry', label: 'Consultas',      icon: MessageSquare },
+          { key: 'quote',   label: 'Cotizaciones ✨', icon: Sparkles },
+        ] as const).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => { setTypeFilter(key); setPage(1) }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors border ${
+              typeFilter === key
+                ? 'bg-brand-wine text-white border-brand-wine'
+                : 'bg-brand-dark border-brand-steel/20 text-brand-silver hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-wrap gap-3">

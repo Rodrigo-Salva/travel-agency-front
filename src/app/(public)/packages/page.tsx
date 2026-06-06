@@ -9,16 +9,34 @@ import type { PackageFilters } from '@/features/packages/types/package.types'
 import { ChevronLeft, ChevronRight, Package, GitCompare, LayoutGrid, List } from 'lucide-react'
 import Link from 'next/link'
 import { ROUTES } from '@/lib/constants/routes'
+import { SurpriseMeButton } from '@/components/ui/SurpriseMeButton'
 
 function PackagesContent() {
   const searchParams = useSearchParams()
-  const initialSearch = searchParams.get('search') ?? ''
-  const [filters, setFilters] = useState<PackageFilters>({ page: 1, page_size: 12, search: initialSearch || undefined })
+
+  const [filters, setFilters] = useState<PackageFilters>(() => ({
+    page: 1,
+    page_size: 12,
+    search:    searchParams.get('search')    || undefined,
+    min_days:  searchParams.get('min_days')  ? Number(searchParams.get('min_days'))  : undefined,
+    max_days:  searchParams.get('max_days')  ? Number(searchParams.get('max_days'))  : undefined,
+    min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
+    max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
+  }))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
-    const s = searchParams.get('search')
-    if (s) setFilters(prev => ({ ...prev, search: s, page: 1 }))
+    const s         = searchParams.get('search')
+    const min_days  = searchParams.get('min_days')  ? Number(searchParams.get('min_days'))  : undefined
+    const max_days  = searchParams.get('max_days')  ? Number(searchParams.get('max_days'))  : undefined
+    const min_price = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined
+    const max_price = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined
+    setFilters(prev => ({
+      ...prev,
+      search: s || undefined,
+      min_days, max_days, min_price, max_price,
+      page: 1,
+    }))
   }, [searchParams])
   const { data, isLoading } = usePackages(filters)
 
@@ -43,13 +61,19 @@ function PackagesContent() {
                 Paquetes diseñados para que solo te preocupes de disfrutar. Vuelos, hotel, traslados y actividades en un solo lugar.
               </p>
             </div>
-            <Link
-              href={ROUTES.comparePackages}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine/10 border border-brand-wine/30 text-brand-rose text-sm font-semibold hover:bg-brand-wine/20 transition-colors flex-shrink-0 mt-2"
-            >
-              <GitCompare className="h-4 w-4" />
-              Comparar paquetes
-            </Link>
+            <div className="flex items-center gap-2 flex-shrink-0 mt-2 flex-wrap">
+              <SurpriseMeButton
+                mode="package"
+                className="px-4 py-2.5 rounded-xl bg-brand-dark border border-brand-steel/20 text-brand-silver hover:text-white hover:border-brand-steel/40 text-sm"
+              />
+              <Link
+                href={ROUTES.comparePackages}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-wine/10 border border-brand-wine/30 text-brand-rose text-sm font-semibold hover:bg-brand-wine/20 transition-colors"
+              >
+                <GitCompare className="h-4 w-4" />
+                Comparar paquetes
+              </Link>
+            </div>
           </div>
         </div>
       </div>

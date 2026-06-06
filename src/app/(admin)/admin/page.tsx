@@ -247,6 +247,8 @@ export default function AdminDashboardPage() {
           <StatCard label="Reservas" value={t?.reservas ?? 0} icon={CalendarCheck} sub={`${estados?.pending ?? 0} pendientes`} href={ROUTES.admin.bookings} />
           <StatCard label="Actividades" value="Gestionar" icon={Zap} href={ROUTES.admin.activities} color="steel" />
           <StatCard label="Reseñas" value={`${t?.reseñas_pendientes ?? 0} pendientes`} icon={Star} href={ROUTES.admin.reviews} color="rose" />
+          <StatCard label="Pagos" value="Ver transacciones" icon={TrendingUp} href={ROUTES.admin.payments} />
+          <StatCard label="Cupones" value="Gestionar" icon={Users} href={ROUTES.admin.coupons} color="steel" />
         </div>
       </div>
     </div>

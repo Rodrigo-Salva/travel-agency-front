@@ -1,10 +1,12 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Star, Clock, Phone, Mail, Wifi, Users, ChevronRight, MessageSquare, BedDouble, Coffee, Dumbbell, Car, Utensils, Waves, Wind, PocketKnife } from 'lucide-react'
 import { useHotel } from '@/features/hotels/hooks/useHotels'
+import { RecentlyViewed } from '@/components/ui/RecentlyViewed'
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +31,23 @@ function StarRating({ rating }: { rating: number }) {
 export default function HotelDetailPage({ params }: Props) {
   const { id } = use(params)
   const { data: hotel, isLoading, isError } = useHotel(id)
+  const { add: trackView } = useRecentlyViewed()
+  const BASE_URL_TRACK = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+
+  useEffect(() => {
+    if (!hotel) return
+    const img = hotel.image
+      ? hotel.image.startsWith('http') ? hotel.image : `${BASE_URL_TRACK}${hotel.image}`
+      : null
+    trackView({
+      id: hotel.id,
+      type: 'hotel',
+      name: hotel.name,
+      image: img,
+      subtitle: hotel.price_per_night ? `Desde $${hotel.price_per_night}/noche` : undefined,
+      href: ROUTES.hotel(hotel.id),
+    })
+  }, [hotel?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
   const imageUrl = hotel?.image
@@ -253,6 +272,12 @@ export default function HotelDetailPage({ params }: Props) {
             </div>
           </aside>
         </div>
+
+        {/* Recently viewed */}
+        <RecentlyViewed
+          exclude={{ id: hotel.id, type: 'hotel' }}
+          className="mt-14 border-t border-brand-steel/10 pt-10"
+        />
       </div>
     </div>
   )

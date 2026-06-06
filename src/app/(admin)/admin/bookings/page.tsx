@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
-import { CalendarCheck, Search, Loader2, XCircle, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarCheck, Search, Loader2, XCircle, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api/client'
@@ -14,6 +14,28 @@ import { queryKeys } from '@/lib/query/keys'
 import type { BookingStatus, PaymentStatus } from '@/features/bookings/types/booking.types'
 
 const PAGE_SIZE = 8
+
+function exportBookingsCSV(bookings: BookingSummary[]) {
+  const headers = ['N° Reserva', 'Cliente', 'Salida', 'Adultos', 'Niños', 'Estado', 'Pago', 'Total']
+  const rows = bookings.map(b => [
+    b.booking_number,
+    typeof b.customer === 'object' && b.customer ? `${b.customer.first_name} ${b.customer.last_name}` : '—',
+    b.travel_date ?? '—',
+    b.num_adults,
+    b.num_children,
+    b.status,
+    b.payment_status,
+    b.total_amount,
+  ])
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `reservas_${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
   pending: 'Pendiente',
@@ -124,10 +146,20 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <p className="text-brand-wine text-xs font-semibold uppercase tracking-widest mb-1">Administración</p>
-        <h1 className="font-display text-3xl font-bold text-white">Reservas</h1>
-        <p className="text-brand-silver text-sm mt-1">{total} reservas en total</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-brand-wine text-xs font-semibold uppercase tracking-widest mb-1">Administración</p>
+          <h1 className="font-display text-3xl font-bold text-white">Reservas</h1>
+          <p className="text-brand-silver text-sm mt-1">{total} reservas en total</p>
+        </div>
+        <button
+          onClick={() => exportBookingsCSV(bookings)}
+          disabled={bookings.length === 0}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-brand-steel/20 text-brand-silver hover:text-white hover:border-brand-wine/40 text-sm font-medium transition-colors disabled:opacity-40"
+        >
+          <Download className="h-4 w-4" />
+          Exportar CSV
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">

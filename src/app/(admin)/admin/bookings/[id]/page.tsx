@@ -1,12 +1,12 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   ChevronLeft, CalendarDays, Users, Clock, CheckCircle2, XCircle,
-  AlertCircle, Loader2, DollarSign, User, Package, Plane, Hotel,
+  AlertCircle, Loader2, DollarSign, User, Package, Plane, Hotel, RotateCcw, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api/client'
@@ -58,11 +58,110 @@ interface AdminBookingDetail {
   flight_bookings: { id: number; flight: number; num_passengers: number; total_price: string; pnr_number?: string }[]
 }
 
+function RefundModal({ booking, onClose, onSuccess }: {
+  booking: AdminBookingDetail
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [amount, setAmount] = useState(booking.paid_amount)
+  const [reason, setReason] = useState('')
+  const maxAmount = parseFloat(booking.paid_amount)
+
+  const mutation = useMutation({
+    mutationFn: () => apiClient.post(API.refundBooking(booking.id), {
+      refund_amount: parseFloat(amount),
+      reason,
+    }),
+    onSuccess: () => {
+      toast.success('Reembolso registrado correctamente')
+      onSuccess()
+      onClose()
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { mensaje?: string } } })?.response?.data?.mensaje
+      toast.error(msg ?? 'Error al procesar el reembolso')
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-brand-dark border border-brand-steel/20 shadow-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold text-white">Procesar reembolso</h2>
+            <p className="text-brand-steel text-xs mt-0.5">Reserva #{booking.booking_number}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-brand-steel hover:text-white hover:bg-brand-steel/10 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="rounded-xl bg-brand-darkest/60 border border-brand-steel/10 p-4 text-sm space-y-1.5">
+          <div className="flex justify-between">
+            <span className="text-brand-steel">Total pagado</span>
+            <span className="text-emerald-400 font-semibold">{formatPrice(booking.paid_amount)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-brand-steel">Monto total reserva</span>
+            <span className="text-white">{formatPrice(booking.total_amount)}</span>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-brand-silver text-xs font-medium">Monto a reembolsar (USD)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            max={maxAmount}
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="w-full rounded-xl bg-brand-darkest border border-brand-steel/20 text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand-wine"
+          />
+          <p className="text-xs text-brand-steel">Máximo: {formatPrice(booking.paid_amount)}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-brand-silver text-xs font-medium">Motivo (opcional)</label>
+          <textarea
+            rows={2}
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="Ej: Cancelación por fuerza mayor, cliente solicitó..."
+            className="w-full rounded-xl bg-brand-darkest border border-brand-steel/20 text-white px-3 py-2.5 text-sm focus:outline-none focus:border-brand-wine resize-none placeholder:text-brand-steel"
+          />
+        </div>
+
+        <div className="rounded-xl bg-amber-500/5 border border-amber-500/15 px-4 py-3 text-xs text-amber-400">
+          ⚠️ Esto marcará la reserva como <strong>Reembolsada</strong> y liberará el cupo. Esta acción no puede deshacerse.
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending || !amount || parseFloat(amount) <= 0}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-wine text-white text-sm font-semibold hover:bg-brand-wine/90 transition-colors disabled:opacity-50"
+          >
+            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+            Confirmar reembolso
+          </button>
+          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-brand-steel/20 text-brand-silver hover:text-white text-sm transition-colors">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminBookingDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const qc = useQueryClient()
   const id = Number(params.id)
+
+  const [showRefund, setShowRefund] = useState(false)
 
   const { data: booking, isLoading, isError } = useQuery<AdminBookingDetail>({
     queryKey: ['admin-booking', id],
@@ -117,8 +216,17 @@ export default function AdminBookingDetailPage() {
     ? `${customer.first_name[0] ?? ''}${customer.last_name[0] ?? ''}`.toUpperCase()
     : '?'
 
+  const canRefund = booking?.payment_status === 'paid' || booking?.payment_status === 'partial'
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-6">
+      {showRefund && booking && (
+        <RefundModal
+          booking={booking}
+          onClose={() => setShowRefund(false)}
+          onSuccess={() => qc.invalidateQueries({ queryKey: ['admin-booking', id] })}
+        />
+      )}
 
       {/* ── Header ── */}
       <div>
@@ -379,6 +487,26 @@ export default function AdminBookingDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Reembolso */}
+          {canRefund && (
+            <div className="rounded-2xl bg-brand-dark border border-brand-steel/10 overflow-hidden">
+              <div className="px-5 py-4 border-b border-brand-steel/10 flex items-center gap-2">
+                <RotateCcw className="h-4 w-4 text-brand-rose" />
+                <h2 className="font-semibold text-white text-sm">Reembolso</h2>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-brand-steel text-xs mb-3">Pagado: <span className="text-emerald-400 font-semibold">{formatPrice(booking.paid_amount)}</span></p>
+                <button
+                  onClick={() => setShowRefund(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-sm font-semibold transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Procesar reembolso
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Cambiar estado */}
           {st.next.length > 0 && (
