@@ -13,9 +13,11 @@ import {
   Star,
   MessageSquare,
   Tag,
+  CreditCard,
   Users,
   LogOut,
   ChevronRight,
+  MessageCircle,
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { ROUTES } from '@/lib/constants/routes'
@@ -30,7 +32,9 @@ const NAV_ITEMS = [
   { label: 'Reservas',    href: ROUTES.admin.bookings,     icon: CalendarCheck },
   { label: 'Reseñas',     href: ROUTES.admin.reviews,      icon: Star },
   { label: 'Consultas',   href: ROUTES.admin.inquiries,    icon: MessageSquare },
+  { label: 'WhatsApp',    href: ROUTES.admin.whatsapp,     icon: MessageCircle },
   { label: 'Cupones',     href: ROUTES.admin.coupons,      icon: Tag },
+  { label: 'Pagos',       href: ROUTES.admin.payments,     icon: CreditCard },
   { label: 'Usuarios',    href: ROUTES.admin.users,        icon: Users },
 ]
 

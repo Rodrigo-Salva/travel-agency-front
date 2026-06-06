@@ -11,7 +11,9 @@ export const ROUTES = {
   activities: '/activities',
   activity: (id: number) => `/activities/${id}`,
   contact: '/contact',
+  cotizar: '/cotizar',
   promotions: '/promotions',
+  ofertas: '/ofertas',
   about: '/about',
   faq: '/faq',
 
@@ -58,6 +60,9 @@ export const ROUTES = {
     inquiries: '/admin/inquiries',
     inquiry: (id: number) => `/admin/inquiries/${id}`,
     coupons: '/admin/coupons',
+    payments: '/admin/payments',
     users: '/admin/users',
+    whatsapp: '/admin/whatsapp',
+    whatsappCampaigns: '/admin/whatsapp/campaigns',
   },
 } as const

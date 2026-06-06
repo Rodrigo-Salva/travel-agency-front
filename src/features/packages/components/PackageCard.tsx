@@ -133,6 +133,16 @@ export function PackageCard({ pkg, listMode }: Props) {
               -{discountPct}% OFF
             </span>
           )}
+          {pkg.is_sold_out && (
+            <span className="inline-flex items-center rounded-full bg-red-500/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg">
+              Agotado
+            </span>
+          )}
+          {!pkg.is_sold_out && pkg.available_spots !== undefined && pkg.available_spots !== null && pkg.available_spots <= 5 && pkg.available_spots > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg animate-pulse">
+              ¡Últimos {pkg.available_spots} cupos!
+            </span>
+          )}
         </div>
 
         {/* Bottom pills */}

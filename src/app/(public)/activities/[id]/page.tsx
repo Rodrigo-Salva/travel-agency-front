@@ -1,10 +1,12 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Users, Zap, Mountain, Smile, MapPin, ChevronRight, MessageSquare, CheckCircle2, Shield, Camera, Coffee, Utensils, Shirt, AlertTriangle } from 'lucide-react'
 import { useActivity } from '@/features/activities/hooks/useActivities'
+import { RecentlyViewed } from '@/components/ui/RecentlyViewed'
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { ROUTES } from '@/lib/constants/routes'
 import { formatPrice } from '@/lib/utils/format'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +39,24 @@ const DIFFICULTY_CONFIG: Record<DifficultyLevel, { label: string; classes: strin
 export default function ActivityDetailPage({ params }: Props) {
   const { id } = use(params)
   const { data: activity, isLoading, isError } = useActivity(id)
+  const { add: trackView } = useRecentlyViewed()
+  const BASE_URL_TRACK = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
+
+  useEffect(() => {
+    if (!activity) return
+    const rawImg = activity.image
+    const img = rawImg
+      ? rawImg.startsWith('http') ? rawImg : `${BASE_URL_TRACK}${rawImg}`
+      : null
+    trackView({
+      id: activity.id,
+      type: 'activity',
+      name: activity.name,
+      image: img,
+      subtitle: activity.price_per_person ? `Desde $${activity.price_per_person}/persona` : undefined,
+      href: ROUTES.activity(activity.id),
+    })
+  }, [activity?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api/', '') ?? 'http://localhost:8000'
   const imageUrl = activity?.image
@@ -245,6 +265,12 @@ export default function ActivityDetailPage({ params }: Props) {
             </div>
           </aside>
         </div>
+
+        {/* Recently viewed */}
+        <RecentlyViewed
+          exclude={{ id: activity.id, type: 'activity' }}
+          className="mt-14 border-t border-brand-steel/10 pt-10"
+        />
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { DestinationCard, DestinationCardSkeleton } from '@/features/destination
 import { DestinationFiltersBar } from '@/features/destinations/components/DestinationFilters'
 import type { DestinationFilters } from '@/features/destinations/types/destination.types'
 import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
+import { SurpriseMeButton } from '@/components/ui/SurpriseMeButton'
 
 export default function DestinationsPage() {
   const [filters, setFilters] = useState<DestinationFilters>({ page: 1, page_size: 12 })
@@ -25,10 +26,19 @@ export default function DestinationsPage() {
             <MapPin className="h-3.5 w-3.5" />
             Explora el mundo
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Destinos</h1>
-          <p className="text-brand-silver/80 max-w-xl">
-            Descubre lugares increíbles alrededor del mundo. Desde playas paradisiacas hasta ciudades históricas llenas de cultura.
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Destinos</h1>
+              <p className="text-brand-silver/80 max-w-xl">
+                Descubre lugares increíbles alrededor del mundo. Desde playas paradisiacas hasta ciudades históricas llenas de cultura.
+              </p>
+            </div>
+            <SurpriseMeButton
+              mode="destination"
+              label="Destino aleatorio"
+              className="mt-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-brand-dark border border-brand-steel/20 text-brand-silver hover:text-white hover:border-brand-steel/40 text-sm"
+            />
+          </div>
         </div>
       </div>
 
