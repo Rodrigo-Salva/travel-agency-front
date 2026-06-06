@@ -6,6 +6,7 @@ import { DestinationCard, DestinationCardSkeleton } from '@/features/destination
 import { DestinationFiltersBar } from '@/features/destinations/components/DestinationFilters'
 import type { DestinationFilters } from '@/features/destinations/types/destination.types'
 import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
+import { SurpriseMeButton } from '@/components/ui/SurpriseMeButton'
 
 export default function DestinationsPage() {
   const [filters, setFilters] = useState<DestinationFilters>({ page: 1, page_size: 12 })
@@ -17,17 +18,27 @@ export default function DestinationsPage() {
   return (
     <div className="min-h-screen bg-brand-darkest">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-dark to-brand-darkest pt-20 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 text-brand-wine text-sm font-semibold uppercase tracking-widest mb-3">
-            <MapPin className="h-4 w-4" />
+      <div className="relative overflow-hidden bg-brand-dark border-b border-brand-steel/15 pt-16 pb-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-600/30 to-transparent" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex items-center gap-2 text-brand-rose text-xs font-bold uppercase tracking-widest mb-3">
+            <MapPin className="h-3.5 w-3.5" />
             Explora el mundo
           </div>
-          <h1 className="font-display text-5xl font-bold text-white mb-4">Destinos</h1>
-          <p className="text-brand-silver max-w-2xl text-lg">
-            Descubre lugares increibles alrededor del mundo. Desde playas paradisiacas hasta
-            ciudades historicas llenas de cultura.
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Destinos</h1>
+              <p className="text-brand-silver/80 max-w-xl">
+                Descubre lugares increíbles alrededor del mundo. Desde playas paradisiacas hasta ciudades históricas llenas de cultura.
+              </p>
+            </div>
+            <SurpriseMeButton
+              mode="destination"
+              label="Destino aleatorio"
+              className="mt-2 flex-shrink-0 px-4 py-2.5 rounded-xl bg-brand-dark border border-brand-steel/20 text-brand-silver hover:text-white hover:border-brand-steel/40 text-sm"
+            />
+          </div>
         </div>
       </div>
 

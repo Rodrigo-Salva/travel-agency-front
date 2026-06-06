@@ -1,123 +1,82 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, Calendar, Users, ArrowRight, Star } from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button'
+import Image from 'next/image'
+import { ChevronDown } from 'lucide-react'
+import { HeroSearch } from '@/components/home/HeroSearch'
 import { ROUTES } from '@/lib/constants/routes'
-import { cn } from '@/lib/utils'
+
+const SLIDES = [
+  { img: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80', tag: 'Naturaleza', title: 'Descubre el mundo', sub: 'con nosotros' },
+  { img: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=1920&q=80', tag: 'Aventura',   title: 'Vive experiencias', sub: 'únicas' },
+  { img: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80', tag: 'Cultura',    title: 'Explora culturas',  sub: 'del mundo' },
+]
 
 export function HeroSection() {
+  const [slide, setSlide] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setSlide(s => (s + 1) % SLIDES.length), 6000)
+    return () => clearInterval(t)
+  }, [])
+
+  const current = SLIDES[slide]
+
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-hero-gradient" />
+    <>
+      <section className="relative min-h-[88vh] flex flex-col overflow-hidden">
+        {SLIDES.map((s, i) => (
+          <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? 'opacity-100' : 'opacity-0'}`}>
+            <Image src={s.img} alt={s.title} fill priority={i === 0} className="object-cover object-center" sizes="100vw" />
+          </div>
+        ))}
 
-      {/* Decorative orbs */}
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-brand-wine/10 blur-3xl" />
-      <div className="absolute bottom-1/4 left-1/4 w-64 h-64 rounded-full bg-brand-steel/10 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-brand-darkest" />
 
-      {/* Grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `linear-gradient(rgba(103,126,138,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(103,126,138,0.3) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
-
-      <div className="relative z-10 container mx-auto px-4 py-20">
-        <div className="max-w-4xl">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-wine/40 bg-brand-wine/10 px-4 py-1.5 text-sm text-brand-rose mb-6">
-            <Star className="h-3.5 w-3.5 fill-current" />
-            <span>Agencia de viajes #1 en Peru</span>
+        {/* Content */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center container mx-auto px-4 py-24">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-4 py-1.5 text-sm text-white/80 font-medium mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-rose animate-pulse" />
+            {current.tag} · Agencia #1 en Perú
           </div>
 
-          {/* Headline */}
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
-            Descubre el{' '}
-            <span className="text-gradient-brand">mundo</span>
-            <br />
-            con nosotros
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-5 max-w-4xl">
+            {current.title}{' '}
+            <span className="text-gradient-brand">{current.sub}</span>
           </h1>
 
-          <p className="text-lg text-brand-silver leading-relaxed mb-10 max-w-2xl">
-            Experiencias de viaje exclusivas, paquetes personalizados y destinos increibles.
-            Tu aventura perfecta comienza aqui.
+          <p className="text-lg text-white/65 leading-relaxed mb-10 max-w-lg">
+            Paquetes exclusivos, hoteles premium y experiencias que recordarás para siempre.
           </p>
 
-          {/* CTA buttons */}
-          <div className="flex flex-wrap gap-4 mb-14">
-            <Link
-              href={ROUTES.packages}
-              className={cn(
-                'inline-flex items-center gap-2 bg-brand-wine hover:bg-brand-wine/90 text-white px-8 h-12 rounded-lg text-base font-semibold glow-wine transition-colors'
-              )}
-            >
-              Ver Paquetes
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href={ROUTES.destinations}
-              className="inline-flex items-center justify-center border border-brand-steel/40 text-brand-silver hover:text-white hover:bg-brand-dark px-8 h-12 rounded-lg text-base font-semibold transition-colors"
-            >
-              Explorar Destinos
-            </Link>
-          </div>
+          {/* Search card */}
+          <HeroSearch />
 
-          {/* Quick search bar */}
-          <div className="rounded-2xl border border-brand-steel/20 bg-brand-dark/80 backdrop-blur-sm p-4 shadow-2xl">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex items-center gap-3 rounded-xl bg-brand-darkest/60 px-4 py-3 border border-brand-steel/10">
-                <MapPin className="h-5 w-5 text-brand-wine shrink-0" />
-                <div>
-                  <p className="text-xs text-brand-steel font-medium uppercase tracking-wide">Destino</p>
-                  <p className="text-sm text-brand-silver">¿A donde quieres ir?</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl bg-brand-darkest/60 px-4 py-3 border border-brand-steel/10">
-                <Calendar className="h-5 w-5 text-brand-wine shrink-0" />
-                <div>
-                  <p className="text-xs text-brand-steel font-medium uppercase tracking-wide">Fechas</p>
-                  <p className="text-sm text-brand-silver">Seleccionar fechas</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl bg-brand-darkest/60 px-4 py-3 border border-brand-steel/10 sm:col-auto">
-                <Users className="h-5 w-5 text-brand-wine shrink-0" />
-                <div className="flex-1">
-                  <p className="text-xs text-brand-steel font-medium uppercase tracking-wide">Viajeros</p>
-                  <p className="text-sm text-brand-silver">2 adultos</p>
-                </div>
-              </div>
-            </div>
-            <Link
-              href={ROUTES.packages}
-              className="flex items-center justify-center w-full mt-3 bg-brand-wine hover:bg-brand-wine/90 text-white h-11 font-semibold rounded-lg transition-colors gap-2"
-            >
-              <Search className="h-4 w-4" />
-              Buscar Paquetes
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-brand-steel/10 bg-brand-darkest/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 divide-x divide-brand-steel/10">
-            {[
-              { value: '500+', label: 'Destinos' },
-              { value: '10K+', label: 'Viajeros felices' },
-              { value: '4.9★', label: 'Calificacion promedio' },
-            ].map((stat) => (
-              <div key={stat.label} className="py-4 px-6 text-center">
-                <p className="font-display text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-brand-steel mt-0.5">{stat.label}</p>
-              </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+            <span className="text-white/30 text-xs">Popular:</span>
+            {['Machu Picchu', 'Cusco', 'Caribe', 'Europa'].map(dest => (
+              <Link key={dest} href={`${ROUTES.packages}?search=${dest}`}
+                className="text-xs text-white/50 hover:text-white transition-colors bg-white/8 hover:bg-white/15 border border-white/10 rounded-full px-3 py-1">
+                {dest}
+              </Link>
             ))}
           </div>
         </div>
-      </div>
-    </section>
+
+        {/* Slide dots */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {SLIDES.map((_, i) => (
+            <button key={i} onClick={() => setSlide(i)}
+              className={`h-1 rounded-full transition-all duration-300 ${i === slide ? 'w-8 bg-white' : 'w-2 bg-white/30'}`} />
+          ))}
+        </div>
+
+        <div className="absolute bottom-10 right-8 z-10 hidden sm:block">
+          <ChevronDown className="h-4 w-4 text-white/25 animate-bounce" />
+        </div>
+      </section>
+
+    </>
   )
 }

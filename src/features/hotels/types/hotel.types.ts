@@ -15,6 +15,7 @@ export interface Hotel {
   price_per_night: string
   total_rooms: number
   image: string | null
+  images?: { image: string }[]
   is_active: boolean
 }
 

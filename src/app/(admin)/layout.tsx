@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   MapPin,
@@ -13,9 +13,11 @@ import {
   Star,
   MessageSquare,
   Tag,
+  CreditCard,
   Users,
   LogOut,
   ChevronRight,
+  MessageCircle,
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { ROUTES } from '@/lib/constants/routes'
@@ -30,13 +32,21 @@ const NAV_ITEMS = [
   { label: 'Reservas',    href: ROUTES.admin.bookings,     icon: CalendarCheck },
   { label: 'Reseñas',     href: ROUTES.admin.reviews,      icon: Star },
   { label: 'Consultas',   href: ROUTES.admin.inquiries,    icon: MessageSquare },
+  { label: 'WhatsApp',    href: ROUTES.admin.whatsapp,     icon: MessageCircle },
   { label: 'Cupones',     href: ROUTES.admin.coupons,      icon: Tag },
+  { label: 'Pagos',       href: ROUTES.admin.payments,     icon: CreditCard },
   { label: 'Usuarios',    href: ROUTES.admin.users,        icon: Users },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, clearAuth } = useAuthStore()
+
+  function handleLogout() {
+    clearAuth()
+    router.push('/login')
+  }
 
   return (
     <div className="min-h-screen bg-brand-darkest flex">
@@ -91,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <button
-            onClick={clearAuth}
+            onClick={handleLogout}
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-brand-steel hover:text-red-400 hover:bg-red-500/5 transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />

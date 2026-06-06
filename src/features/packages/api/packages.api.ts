@@ -11,6 +11,7 @@ function buildParams(filters: PackageFilters): Record<string, string> {
   if (filters.min_price) params.min_price = String(filters.min_price)
   if (filters.max_price) params.max_price = String(filters.max_price)
   if (filters.min_days) params.min_days = String(filters.min_days)
+  if (filters.max_days) params.max_days = String(filters.max_days)
   if (filters.search) params.search = filters.search
   if (filters.ordering) params.ordering = filters.ordering
   if (filters.page) params.page = String(filters.page)
@@ -48,17 +49,60 @@ export const packagesApi = {
     return data.categorias as Category[]
   },
 
-  create: async (payload: Record<string, unknown>): Promise<PackageDetail> => {
-    const { data } = await apiClient.post(API.packages, payload)
+  create: async (payload: FormData | Record<string, unknown>): Promise<PackageDetail> => {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.post(API.packages, payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
     return data.paquete as PackageDetail
   },
 
-  update: async (id: number, payload: Record<string, unknown>): Promise<PackageDetail> => {
-    const { data } = await apiClient.patch(API.package(id), payload)
+  update: async (id: number, payload: FormData | Record<string, unknown>): Promise<PackageDetail> => {
+    const isFormData = payload instanceof FormData
+    const { data } = await apiClient.patch(API.package(id), payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    })
     return data.paquete as PackageDetail
   },
 
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(API.package(id))
   },
+
+  // ── Itinerary CRUD ─────────────────────────────────────────────────────────
+  getItinerary: async (packageId: number | string) => {
+    const { data } = await apiClient.get(API.itinerary(packageId))
+    return data.itinerario as ItineraryDay[]
+  },
+
+  createItineraryDay: async (packageId: number | string, payload: ItineraryDayPayload) => {
+    const { data } = await apiClient.post(API.itinerary(packageId), payload)
+    return data.dia as ItineraryDay
+  },
+
+  updateItineraryDay: async (packageId: number | string, dayId: number, payload: Partial<ItineraryDayPayload>) => {
+    const { data } = await apiClient.patch(API.itineraryDay(packageId, dayId), payload)
+    return data.dia as ItineraryDay
+  },
+
+  deleteItineraryDay: async (packageId: number | string, dayId: number): Promise<void> => {
+    await apiClient.delete(API.itineraryDay(packageId, dayId))
+  },
+}
+
+export interface ItineraryDay {
+  id: number
+  day_number: number
+  title: string
+  description: string
+  activities: string[]
+  meals_included: string[]
+}
+
+export interface ItineraryDayPayload {
+  day_number: number
+  title: string
+  description: string
+  activities: string[]
+  meals_included: string[]
 }

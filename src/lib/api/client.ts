@@ -74,7 +74,10 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         clearTokens()
-        // Redirect to login only in browser context
+        if (typeof document !== 'undefined') {
+          document.cookie = 'ta_auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+          document.cookie = 'ta_user_type=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+        }
         if (typeof window !== 'undefined') {
           window.location.href = '/login'
         }
@@ -88,36 +91,32 @@ apiClient.interceptors.response.use(
   }
 )
 
-// ------- Token storage helpers (sessionStorage) -------
-// These are defined here to avoid circular imports with the auth store.
-// The auth store also calls these to keep Zustand in sync.
-
 const ACCESS_TOKEN_KEY = 'ta_access'
 const REFRESH_TOKEN_KEY = 'ta_refresh'
 
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null
-  return sessionStorage.getItem(ACCESS_TOKEN_KEY)
+  return localStorage.getItem(ACCESS_TOKEN_KEY)
 }
 
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null
-  return sessionStorage.getItem(REFRESH_TOKEN_KEY)
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
 export function setAccessToken(token: string): void {
   if (typeof window === 'undefined') return
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, token)
+  localStorage.setItem(ACCESS_TOKEN_KEY, token)
 }
 
 export function setTokens(access: string, refresh: string): void {
   if (typeof window === 'undefined') return
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, access)
-  sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh)
+  localStorage.setItem(ACCESS_TOKEN_KEY, access)
+  localStorage.setItem(REFRESH_TOKEN_KEY, refresh)
 }
 
 export function clearTokens(): void {
   if (typeof window === 'undefined') return
-  sessionStorage.removeItem(ACCESS_TOKEN_KEY)
-  sessionStorage.removeItem(REFRESH_TOKEN_KEY)
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
 }

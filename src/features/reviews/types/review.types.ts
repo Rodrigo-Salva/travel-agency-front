@@ -1,5 +1,6 @@
 export interface Review {
   id: number
+  package?: number | null
   customer_name: string
   overall_rating: number
   accommodation_rating: number | null
@@ -11,6 +12,7 @@ export interface Review {
   comment: string
   pros: string | null
   cons: string | null
+  photo: string | null
   is_verified: boolean
   is_approved: boolean
   created_at: string

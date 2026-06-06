@@ -19,6 +19,7 @@ export interface Destination {
   is_popular: boolean
   best_season: string
   created_at: string
+  packages_count?: number | null
 }
 
 export interface DestinationFilters {
